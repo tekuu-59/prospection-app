@@ -1,4 +1,5 @@
 _worker.js
+.wrangler
 wrangler.jsonc
 schema.sql
 test

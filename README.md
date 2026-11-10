@@ -1,68 +1,102 @@
-# Prospection (app téléphone)
+# Prospection : l'app terrain pour la franchise
 
-Une seule app installable, deux écrans :
+Une app à installer sur le téléphone pour la prospection en porte-à-porte. Gratuite, sans compte à créer pour les utilisateurs, avec un compte Cloudflare (gratuit) pour la mettre en ligne.
 
-- **Prospection** : gros bouton qui compte les portes poussées, compteurs R1 / R2, zone de prospection, historique par jour, export Excel (`Date / Zone / Portes / R1 / R2`).
-- **Cartes** : photo d'une carte de visite, lecture du texte sur le téléphone, champs pré-remplis à vérifier, export Excel (`Société / Prénom / Nom / E-mail / Téléphone / Site web / Adresse / Date`).
+**Ce qu'elle fait**
 
-Pas de compte, pas de serveur : les données restent dans le navigateur du téléphone. Les photos ne sont jamais enregistrées.
+| Écran | À quoi ça sert |
+| --- | --- |
+| 🚪 Portes | Un gros bouton qui compte les portes. Zone, durée du jour, clients prospectés avec leur statut **R1** (rendez-vous pris) ou **R2** (à repasser), commentaires, historique. |
+| 🗺 Carte | Les zones et les clients sur une carte (vert R1, orange R2). |
+| 📊 Stats | Portes, rendez-vous, taux de transformation, portes par heure, zones déjà faites. |
+| 💼 Cartes | Photo d'une carte de visite : société, nom, e-mail, téléphone, site et adresse sont lus et pré-remplis. Export pour un mailing. |
 
-## Mettre en ligne (Cloudflare Pages, gratuit)
+Plus : export Excel, sauvegarde en ligne entre appareils, et envoi du jour dans le tableau de bord Google Sheet.
 
-L'app doit être en HTTPS (caméra et installation). Même méthode que le site vitrine, mais **dans un dépôt privé séparé** :
+---
 
-1. Crée un dépôt GitHub privé `prospection-app` et envoie ce dossier dedans (`git init`, `git add .`, `git commit`, `git push`).
-2. Cloudflare → Workers & Pages → Create → Pages → Connect to Git → choisis le dépôt.
-3. Framework preset : *None*. Build command : vide. Build output directory : `/`.
-4. Ouvre l'adresse `.pages.dev` obtenue.
+## Installer sa propre copie (environ 20 minutes, une seule fois)
 
-Pour tester sur ton PC : `python3 -m http.server 8000` dans le dossier, puis http://localhost:8000.
+Chaque franchisé a **sa propre copie**, avec sa base et son mot de passe : personne ne voit les données des autres.
 
-Après une modification du code, change `VERSION` dans `sw.js` (`v1` → `v2`) pour que les téléphones prennent la nouvelle version.
+Il te faut : un compte [GitHub](https://github.com) et un compte [Cloudflare](https://cloudflare.com) (gratuits). Active la double authentification sur les deux.
 
-## Installer sur le téléphone
+### 1. Copier le projet sur ton GitHub
+1. Sur GitHub : **New repository**, nom `prospection-app`, **Private**.
+2. Envoie tout le contenu de ce dossier dedans (**Add file**, **Upload files**, glisse tous les fichiers et dossiers).
+3. Vérifie que ces fichiers sont bien à la racine du dépôt, à côté de `index.html` : `wrangler.jsonc`, `.assetsignore`, `_worker.js`. Les fichiers qui commencent par un point sont masqués sur Mac et Linux : sur GitHub, ils doivent apparaître dans la liste.
 
-- **iPhone (Safari)** : Partager → *Sur l'écran d'accueil*.
-- **Android (Chrome)** : menu ⋮ → *Installer l'application*.
+### 2. Créer la base de données
+1. Cloudflare : **Storage & Databases**, **D1**, **Create database**, nom `prospection`.
+2. Ouvre-la, onglet **Console**, colle le contenu du fichier `schema.sql`, **Execute**.
+3. Copie son **Database ID** (un long identifiant, pas le nom).
 
-Ouvre l'app depuis l'icône : sur iPhone, un site non installé peut voir ses données effacées par le système.
+### 3. Renseigner l'identifiant
+Dans `wrangler.jsonc` sur GitHub (crayon pour modifier), remplace `REMPLACE-MOI` par ton Database ID. Garde les guillemets. Si tu changes `"name"`, il doit être identique au nom du Worker créé à l'étape suivante.
 
-## Utilisation
+### 4. Publier le site
+1. Cloudflare : **Workers & Pages**, **Create**, **Import a repository** (Git), choisis `prospection-app`.
+2. Laisse la commande de build vide, valide. Au bout d'une ou deux minutes, tu obtiens une adresse `https://….workers.dev`.
+3. Cette adresse est **définitive** : les données du téléphone sont liées à elle. Choisis le nom une fois pour toutes.
 
-- Choisis la zone, appuie sur le bouton à chaque porte. « − annuler » retire la dernière porte. Les compteurs sont par jour et par zone.
-- **Scanner une carte** : cadre bien la carte, bien éclairée. Corrige les champs, puis *Enregistrer*. Un e-mail déjà présent déclenche un avertissement.
-- **Exporter en Excel** : le fichier se télécharge (`prospection-AAAA-MM-JJ.xlsx`, `contacts-AAAA-MM-JJ.xlsx`). Exporte régulièrement : c'est ta sauvegarde.
+### 5. Choisir le mot de passe
+Dans le Worker : **Settings**, **Variables and Secrets** (le bloc **Runtime**, pas celui de Build), **Add**, type **Secret**, nom `APP_PASSWORD`, valeur : une longue phrase de passe (16 caractères ou plus). Clique sur **Deploy**.
 
-## Statistiques, tournée, sauvegarde en ligne
+### 6. Vérifier
+Ouvre `https://TON-ADRESSE/api/sync`. Tu dois voir `"worker":true,"db":true,"password":true`. Sinon, voir « En cas de souci » plus bas.
 
-- **Durée de prospection du jour** : deux menus (heures, minutes) sous le gros bouton, comme pour l'heure d'un rendez-vous. L'export Excel a un onglet « Jours » (Date, Durée en minutes, Portes, Clients notés, R1, R2), et les stats donnent le temps total et les portes par heure.
-- **Stats** : portes, clients, R1, R2, taux de rendez-vous, portes par jour (14 derniers jours) et par zone, sur 7 jours, 30 jours ou tout.
-- **Tournée** : dans l'onglet Stats, les zones déjà faites, de la plus ancienne à la plus récente, avec « Reprendre » pour retourner dans une zone.
-- **Sauvegarde en ligne** (facultative) : voir `DEPLOIEMENT.md`. Elle copie les données dans une base Cloudflare D1 protégée par un mot de passe, et les partage entre appareils.
+### 7. Installer sur le téléphone
+- **iPhone (Safari)** : Partager, **Sur l'écran d'accueil**.
+- **Android (Chrome)** : menu ⋮, **Installer l'application**.
 
-## Tableau de bord Google
+Ouvre l'app depuis l'icône, entre le mot de passe en bas de l'écran une seule fois : « ☁️ Sauvegardé en ligne » s'affiche. Fais pareil sur chaque appareil.
 
-Un bouton envoie le jour choisi dans le Google Sheet de prospection (ligne du jour dans l'onglet du mois, clients en R1 / R2 dans l'onglet « Projets »). Il passe par le script `apps-script/Code.gs` : mise en place dans `DEPLOIEMENT.md`.
+---
 
-## Carte et position
+## Utiliser l'app au quotidien
 
-- **📍 Utiliser ma position** (sous la zone) : enregistre la position GPS de la zone et, si le champ est vide, le remplit avec le nom de la rue et de la commune.
-- **+ Client prospecté** : la position du téléphone est enregistrée avec le client (si la localisation est autorisée).
-- **Onglet Carte** : repères colorés (vert R1, orange R2, bleu autre, cercle rouge pour une zone), filtre « Aujourd'hui / Tout », et un lien « Ouvrir dans Maps » sur chaque point. L'export Excel des clients a une colonne « Lien carte ».
-- La carte (Leaflet, depuis cdn.jsdelivr.net) et ses fonds (OpenStreetMap) demandent du réseau. Le nom de rue vient du service Nominatim d'OpenStreetMap : la position y est envoyée, à mentionner dans une éventuelle politique de confidentialité.
+1. **Zone** : tape son nom, ou « 📍 Utiliser ma position ».
+2. **Chaque porte** : un appui sur le gros bouton. « − annuler » retire la dernière.
+3. **Client rencontré** : « + Client prospecté », nom, statut (Aucun, R1 avec date et heure, R2 avec ou sans date), commentaire.
+4. **Durée du jour** : deux menus, heures puis minutes.
+5. **Carte de visite** : onglet Cartes, **Scanner**, vérifie les champs, **Enregistrer**. La première lecture a besoin de réseau (téléchargement unique du lecteur de texte).
+6. **Fin de journée** : **Exporter en Excel**, ou **Envoyer vers le tableau** si le Google Sheet est branché.
 
-## Limites à connaître
+Les données sont sur le téléphone **et** sur ton Cloudflare. Exporte quand même en Excel de temps en temps.
 
-- **R1** = rendez-vous pris, **R2** = à repasser plus tard : ce sont des statuts **par client**. Avec « + Client prospecté », on note le client, son statut (aucun, R1 avec date et heure, R2 avec date facultative) et un commentaire. Les compteurs R1 / R2 se calculent tout seuls. L'export a deux onglets : « Prospection » (Date, Zone, Portes, R1, R2) et « Clients » (Date, Zone, Client, Statut, date du RDV, Commentaire).
-- La colonne **Portes** est ajoutée à l'export, en plus de Date, Zone, R1 et R2.
-- La **première lecture de carte nécessite du réseau** : le lecteur de texte (Tesseract.js, chargé depuis cdn.jsdelivr.net) et ses données de langue se téléchargent une fois (quelques Mo), puis restent en cache et fonctionnent hors ligne.
-- La lecture n'est jamais parfaite (cartes très stylisées, texte clair sur fond foncé) : vérifie chaque fiche.
-- Les données sont par téléphone : pas de synchronisation entre appareils.
+## Brancher le Google Sheet (facultatif)
+
+Voir `DEPLOIEMENT.md`, section « Remplir le tableau de bord Google ». **Fais le premier essai sur une copie de ta feuille.** Le script s'adapte à un tableau avec un onglet par mois et un onglet « Projets ».
+
+## Mettre à jour l'app
+
+- **Modifier un fichier** : modifie-le sur GitHub, commit, le site se republie tout seul. Si tu touches au code, change `VERSION` dans `sw.js` (`v17` en `v18`) pour que les téléphones prennent la nouvelle version.
+- **Recevoir une nouvelle version de ce projet** : remplace les fichiers du dépôt par les nouveaux, **sauf** `wrangler.jsonc` (il contient ton Database ID).
+- Ferme complètement l'app et rouvre-la, deux fois si besoin : la version s'affiche en bas.
+
+## Repartir de zéro après des tests
+
+- Dans l'app, tout en bas : **Effacer toutes les données…**, taper `EFFACER`. Efface le téléphone et la sauvegarde en ligne.
+- Base seulement : D1, Console, `DELETE FROM records;`
+
+## En cas de souci
+
+| Symptôme | Cause probable |
+| --- | --- |
+| « Mode local : aucun serveur… » | `_worker.js` ou `wrangler.jsonc` manquant à la racine du dépôt. |
+| « Serveur trouvé, mais la base ou le mot de passe n'est pas configuré » | Ouvre `/api/sync` : `"db":false` = mauvais Database ID ; `"password":false` = secret absent du bloc **Runtime**, ou pas redéployé. |
+| Erreur de build « Uploading a Pages _worker.js » | `.assetsignore` absent du dépôt. |
+| Erreur « must have a valid database_id » | `REMPLACE-MOI` toujours dans `wrangler.jsonc`. |
+| L'ancienne version reste affichée | Fermer l'app complètement et la rouvrir. |
+| La caméra ne s'ouvre pas | Autoriser l'appareil photo dans les réglages du téléphone ; l'adresse doit être en `https://`. |
+| Données disparues sur iPhone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. |
+
+Détails et captures de la procédure : `DEPLOIEMENT.md`.
 
 ## Données personnelles
 
-Les cartes contiennent des données personnelles de prospects. Pour les mailings, prévois une mention d'information et un lien de désinscription (RGPD, prospection B2B). Ce n'est pas un avis juridique.
+Les cartes contiennent des données de prospects. Pour les mailings, prévois une mention d'information et un lien de désinscription (RGPD, prospection B2B). Ce n'est pas un avis juridique. La position GPS d'une zone est envoyée à OpenStreetMap (Nominatim) pour retrouver le nom de la rue ; les photos de cartes ne sont jamais enregistrées.
 
-## Tests
+## Pour les développeurs
 
-`node --test test/*.test.mjs` (lecture des cartes, génération du fichier Excel).
+App en JavaScript pur, sans build. `_worker.js` (route `/api/sync` et `/api/sheet`) et `wrangler.jsonc` pour Cloudflare. Test local : `python3 -m http.server 8000`. Tests : `node --test test/*.mjs`.
