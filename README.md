@@ -21,10 +21,11 @@ Chaque franchisé a **sa propre copie**, avec sa base et son mot de passe : pers
 
 Il te faut : un compte [GitHub](https://github.com) et un compte [Cloudflare](https://cloudflare.com) (gratuits). Active la double authentification sur les deux.
 
-### 1. Copier le projet sur ton GitHub
-1. Sur GitHub : **New repository**, nom `prospection-app`, **Private**.
-2. Envoie tout le contenu de ce dossier dedans (**Add file**, **Upload files**, glisse tous les fichiers et dossiers).
-3. Vérifie que ces fichiers sont bien à la racine du dépôt, à côté de `index.html` : `wrangler.jsonc`, `.assetsignore`, `_worker.js`. Les fichiers qui commencent par un point sont masqués sur Mac et Linux : sur GitHub, ils doivent apparaître dans la liste.
+### 1. Faire un fork sur ton GitHub
+1. Sur la page GitHub de ce projet, clique sur **Fork**, puis **Create fork**. Tu obtiens ta propre copie, qui reste liée à l'original pour recevoir les mises à jour.
+2. Vérifie à la racine de ta copie, à côté de `index.html` : `wrangler.jsonc`, `.assetsignore`, `_worker.js`.
+
+Tu n'as pas de compte GitHub à l'aise avec les forks ? Télécharge le zip, crée un dépôt vide et envoie-y les fichiers (les fichiers qui commencent par un point sont masqués sur Mac et Linux : ils doivent apparaître dans la liste sur GitHub). Tu perdras seulement le bouton de mise à jour.
 
 ### 2. Créer la base de données
 1. Cloudflare : **Storage & Databases**, **D1**, **Create database**, nom `prospection`.
@@ -71,7 +72,7 @@ Voir `DEPLOIEMENT.md`, section « Remplir le tableau de bord Google ». **Fais l
 ## Mettre à jour l'app
 
 - **Modifier un fichier** : modifie-le sur GitHub, commit, le site se republie tout seul. Si tu touches au code, change `VERSION` dans `sw.js` (`v17` en `v18`) pour que les téléphones prennent la nouvelle version.
-- **Recevoir une nouvelle version de ce projet** : remplace les fichiers du dépôt par les nouveaux, **sauf** `wrangler.jsonc` (il contient ton Database ID).
+- **Recevoir une nouvelle version de ce projet** : sur ton fork, clique sur **Sync fork**, puis **Update branch**. S'il signale un conflit sur `wrangler.jsonc`, garde **ta** version (elle contient ton Database ID). Cloudflare republie tout seul. Sans fork : remplace les fichiers à la main, **sauf** `wrangler.jsonc`.
 - Ferme complètement l'app et rouvre-la, deux fois si besoin : la version s'affiche en bas.
 
 ## Repartir de zéro après des tests
