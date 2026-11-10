@@ -65,9 +65,25 @@ Ouvre l'app depuis l'icône, entre le mot de passe en bas de l'écran une seule 
 
 Les données sont sur le téléphone **et** sur ton Cloudflare. Exporte quand même en Excel de temps en temps.
 
-## Brancher le Google Sheet (facultatif)
+## Brancher le Google Sheet (facultatif, 10 minutes)
 
-Voir `DEPLOIEMENT.md`, section « Remplir le tableau de bord Google ». **Fais le premier essai sur une copie de ta feuille.** Le script s'adapte à un tableau avec un onglet par mois et un onglet « Projets ».
+Le bouton **📤 Envoyer vers le tableau** (écran Portes, tout en bas) écrit la journée dans ton tableau de bord : une ligne « synthèse du jour » dans l'onglet du mois, et les clients en R1 ou R2 dans l'onglet « Projets ». Prérequis : la sauvegarde en ligne fonctionne (étapes 1 à 7). **Fais le premier essai sur une copie du tableau.**
+
+1. **Coller le script.** Ouvre ton Google Sheet, **Extensions**, **Apps Script**. Supprime le code d'exemple, colle le contenu de `apps-script/Code.gs` (dans ce dépôt), puis **Enregistrer**.
+2. **Choisir un jeton.** Dans Apps Script : roue dentée **Paramètres du projet**, **Propriétés du script**, **Ajouter** : nom `TOKEN`, valeur : une longue phrase différente du mot de passe de l'app. Enregistre.
+3. **Publier le script.** **Déployer**, **Nouveau déploiement**, type **Application Web**. « Exécuter en tant que » : **Moi**. « Qui a accès » : **Tout le monde**. Valide et autorise l'accès (si Google affiche « application non validée » : **Paramètres avancés**, puis **Accéder à…**). Copie l'adresse qui finit par `/exec`.
+4. **Donner l'adresse à Cloudflare.** Dans ton Worker : **Settings**, **Variables and Secrets** (bloc **Runtime**), ajoute deux **Secrets** :
+   - `SHEET_SCRIPT_URL` : l'adresse `/exec` ;
+   - `SHEET_TOKEN` : la même phrase que `TOKEN`.
+
+   Puis **Deploy**. Vérifie `https://TON-ADRESSE/api/sync` : tu dois voir `"sheet":true`.
+5. **Envoyer.** Dans l'app, choisis le jour (aujourd'hui par défaut) et touche **Envoyer vers le tableau**. Un message indique l'onglet et la ligne remplis. Renvoyer le même jour met à jour sans doublon.
+
+**Ton tableau doit avoir** un onglet par mois (son nom contient « novembre », « décembre »…) avec des colonnes titrées Date, Type, Lieu, Durée, Contacts, R1, R2, Rendez-vous pris, et un onglet « Projets ». Les colonnes peuvent être déplacées, pas renommées.
+
+**Si tu modifies le script plus tard** : **Déployer**, **Gérer les déploiements**, crayon, **Nouvelle version**. Sinon l'adresse garde l'ancien code.
+
+Détails (ce qui est écrit où, cas particuliers, Workspace d'entreprise) : `DEPLOIEMENT.md`.
 
 ## Mettre à jour l'app
 
@@ -90,6 +106,8 @@ Voir `DEPLOIEMENT.md`, section « Remplir le tableau de bord Google ». **Fais l
 | Erreur « must have a valid database_id » | `REMPLACE-MOI` toujours dans `wrangler.jsonc`. |
 | L'ancienne version reste affichée | Fermer l'app complètement et la rouvrir. |
 | La caméra ne s'ouvre pas | Autoriser l'appareil photo dans les réglages du téléphone ; l'adresse doit être en `https://`. |
+| « Envoi vers Google non configuré » | `"sheet":false` sur `/api/sync` : les secrets `SHEET_SCRIPT_URL` et `SHEET_TOKEN` manquent dans le bloc **Runtime**, ou pas redéployé. |
+| « ⚠️ … unauthorized » ou « Le script Google ne répond pas correctement » | `SHEET_TOKEN` différent de `TOKEN`, ou le déploiement Apps Script n'est pas en accès « Tout le monde » / pas en nouvelle version. |
 | Données disparues sur iPhone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. |
 
 Détails et captures de la procédure : `DEPLOIEMENT.md`.
