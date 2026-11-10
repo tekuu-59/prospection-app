@@ -99,7 +99,7 @@ Ouvre ensuite l'app **depuis l'icône** : sur iPhone, un site non installé peut
 
 ## Vérifier que c'est la bonne version
 
-Un petit « v15 » (ou plus) s'affiche tout en bas de l'écran Prospection. Après une mise à jour, ferme complètement l'app et rouvre-la une ou deux fois, avec du réseau, pour qu'elle prenne la nouvelle version.
+Un petit « v16 » (ou plus) s'affiche tout en bas de l'écran Prospection. Après une mise à jour, ferme complètement l'app et rouvre-la une ou deux fois, avec du réseau, pour qu'elle prenne la nouvelle version.
 
 Avant de s'en servir pour de vrai, fais ce test de 5 minutes sur le téléphone :
 
@@ -131,3 +131,11 @@ L'adresse `.pages.dev` est publique, mais non listée, et l'app contient une bal
 - **La caméra ne s'ouvre pas** : l'adresse doit commencer par `https://` ; vérifie aussi l'autorisation de l'appareil photo dans les réglages du téléphone.
 - **La première lecture de carte échoue** : elle télécharge le lecteur de texte, il faut du réseau.
 - **Données disparues sur iPhone** : l'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé.
+- **« Mode local : aucun serveur de sauvegarde détecté »** alors que le site est en ligne : ouvre `https://TON-SITE/api/sync` dans le navigateur. Si tu vois `{"worker":true,"db":true,"password":true,...}`, tout est bon. Page d'app ou 404 → `_worker.js` n'est pas à la racine du déploiement. `"db":false` ou `"password":false` → le binding D1 nommé `DB` ou le secret `APP_PASSWORD` manque ; ajoute-le puis **redéploie** (les réglages ne s'appliquent qu'au déploiement suivant).
+
+## Remettre l'app à zéro après tes tests
+
+- **Dans l'app** : tout en bas, « Effacer toutes les données… », taper `EFFACER`. Efface le téléphone **et** la sauvegarde en ligne (les autres appareils se vident à leur prochaine synchro).
+- **Seulement la base en ligne** : Cloudflare → Storage & Databases → D1 → ta base → Console → `DELETE FROM records;`
+- **Seulement ce navigateur** : réglages du navigateur → données du site → supprimer.
+Pense aussi à vider les lignes de test dans le Google Sheet.

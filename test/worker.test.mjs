@@ -24,7 +24,8 @@ const rec = (id, data, updated, deleted = 0) => ({ id, kind: 'day', data: JSON.s
 test('mauvais mot de passe, mauvaise méthode, non configuré', async () => {
   const e = env();
   assert.equal((await call(e, {}, 'nope')).status, 401);
-  assert.equal((await call(e, {}, 'x', 'GET')).status, 405);
+  assert.equal((await call(e, {}, 'x', 'PUT')).status, 405);
+  assert.deepEqual(await (await call(e, {}, 'x', 'GET')).json(), { worker: true, db: true, password: true, sheet: false }); // diagnostic, sans secret
   assert.equal((await call({ ...e, APP_PASSWORD: undefined }, {})).status, 503);
 });
 

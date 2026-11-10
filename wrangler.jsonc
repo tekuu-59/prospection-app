@@ -1,0 +1,11 @@
+{
+  // Le nom doit être celui du Worker dans Cloudflare (visible dans l'adresse xxx.workers.dev)
+  "name": "propection-app",
+  "main": "_worker.js",
+  "compatibility_date": "2025-01-01",
+  "assets": { "directory": ".", "binding": "ASSETS" },
+  "d1_databases": [
+    // remplace database_id par l'identifiant de ta base (Cloudflare > D1 > ta base)
+    { "binding": "DB", "database_name": "prospection", "database_id": "3940d0da-328b-4e48-a6e3-3b7ba8d8c2bd" }
+  ]
+}

@@ -82,7 +82,8 @@ const sync = createSync({
   apply: applyRemote,
   onStatus(state, detail) {
     const text = {
-      local: 'Mode local : pas de sauvegarde en ligne',
+      local: 'Mode local : aucun serveur de sauvegarde détecté',
+      unconfigured: '☁️ Serveur trouvé, mais la base ou le mot de passe n\'est pas configuré dans Cloudflare',
       login: '☁️ Saisis le mot de passe pour activer la sauvegarde en ligne',
       'bad-password': '☁️ Mot de passe incorrect',
       ok: `☁️ Sauvegardé en ligne · ${detail ? hhmm(detail) : ''}`,
@@ -379,6 +380,21 @@ for (const b of document.querySelectorAll('.chips [data-p]')) {
     renderStats();
   };
 }
+
+// ---------- effacer les données ----------
+$('reset').onclick = () => {
+  if (prompt('Effacer TOUTES les données (portes, clients, contacts, durées) ?\nSi la sauvegarde en ligne est active, elles seront aussi effacées en ligne.\nTape EFFACER pour confirmer.') !== 'EFFACER') return;
+  days = [];
+  jours = [];
+  contacts = [];
+  write('zone', '');
+  $('zone').value = '';
+  save();
+  renderProspection();
+  renderContacts();
+  if (!$('screen-stats').hidden) renderStats();
+  toast('Données effacées');
+};
 
 // ---------- envoi vers le tableau de bord Google ----------
 $('send-date').value = today();

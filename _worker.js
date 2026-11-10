@@ -59,6 +59,8 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/api/sheet') return sheet(request, env);
     if (url.pathname !== '/api/sync') return env.ASSETS.fetch(request);
+    // Diagnostic : ouvrir /api/sync dans un navigateur indique ce qui est configuré (jamais les valeurs)
+    if (request.method === 'GET') return json({ worker: true, db: !!env.DB, password: !!env.APP_PASSWORD, sheet: !!(env.SHEET_SCRIPT_URL && env.SHEET_TOKEN) });
     if (!env.DB) return json({ error: 'not_configured' }, 503);
     const no = await refuse(request, env);
     if (no) return no;
