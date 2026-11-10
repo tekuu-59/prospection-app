@@ -27,6 +27,13 @@
       </button>
       <button id="undo" class="link" type="button">− annuler la dernière porte</button>
 
+      <div class="field" style="margin-top:16px">Durée de prospection du jour
+        <div class="duree-pick">
+          <select id="duree-h" aria-label="Heures"></select><span>h</span>
+          <select id="duree-m" aria-label="Minutes"></select><span>min</span>
+        </div>
+      </div>
+
       <div class="rdv">
         <div class="step"><b>R1</b><output id="r1">0</output><span class="sub">rendez-vous</span></div>
         <div class="step"><b>R2</b><output id="r2">0</output><span class="sub">à repasser</span></div>
@@ -49,6 +56,11 @@
       <h2>Historique</h2>
       <ul id="history" class="list"></ul>
       <button id="export-prospection" class="primary" type="button">Exporter en Excel</button>
+
+      <h2>Tableau de bord Google</h2>
+      <label class="field">Jour à envoyer <input id="send-date" type="date"></label>
+      <button id="send-sheet" class="primary" type="button" style="margin-top:0">📤 Envoyer vers le tableau</button>
+      <p id="send-status" class="status" role="status"></p>
     </section>
 
     <section id="screen-map" hidden>
@@ -59,6 +71,38 @@
       <div id="map" role="application" aria-label="Carte des zones et clients"></div>
       <p id="map-status" class="status" role="status"></p>
       <p class="hint">🟢 R1 · 🟠 R2 · 🔵 client · ◯ rouge : zone</p>
+    </section>
+
+    <section id="screen-stats" hidden>
+      <div class="chips">
+        <button data-p="7" type="button">7 jours</button>
+        <button data-p="30" type="button">30 jours</button>
+        <button data-p="" class="on" type="button">Tout</button>
+      </div>
+      <div id="kpis" class="kpis"></div>
+      <p id="kpi-note" class="hint"></p>
+
+      <h2>Portes par jour</h2>
+      <div id="bars" class="bars"></div>
+
+      <h2>Par zone</h2>
+      <ul id="by-zone" class="list"></ul>
+
+      <h2>Tournée · zones déjà faites</h2>
+      <ul id="tour" class="list"></ul>
+    </section>
+
+    <section id="screen-qr" hidden>
+      <p class="hint" style="margin-top:0">À montrer à la porte : le client scanne avec l'appareil photo de son téléphone.</p>
+      <div id="qr" class="qr"></div>
+      <p id="qr-url" class="qr-url"></p>
+      <label class="field">Adresse du site
+        <input id="site-url" type="url" inputmode="url" autocomplete="off" placeholder="https://…">
+      </label>
+      <div class="row">
+        <button id="qr-copy" class="secondary" type="button">Copier le lien</button>
+        <button id="qr-share" class="primary" type="button" style="margin-top:16px">Partager</button>
+      </div>
     </section>
 
     <section id="screen-cards" hidden>
@@ -87,13 +131,20 @@
       <button id="export-contacts" class="primary" type="button">Exporter en Excel</button>
     </section>
 
-    <p class="note">Les données restent dans ce téléphone : exporte régulièrement en Excel pour en garder une copie. · v9</p>
+    <p class="note">Les données sont enregistrées dans ce téléphone et, si la sauvegarde en ligne est activée, sur ton espace Cloudflare. Exporte aussi en Excel de temps en temps. · v15</p>
+    <p class="note"><span id="sync-status"></span> <button id="sync-now" class="link inline" type="button" hidden>Synchroniser</button></p>
+    <form id="sync-form" class="rdv-form" hidden>
+      <label class="field">Mot de passe de sauvegarde <input id="sync-pw" type="password" autocomplete="current-password" required></label>
+      <button type="submit" class="primary" style="margin-top:0">Activer</button>
+    </form>
   </main>
 
   <nav>
-    <button id="tab-prospection" class="on" type="button">🚪 Prospection</button>
-    <button id="tab-map" type="button">🗺 Carte</button>
-    <button id="tab-cards" type="button">💼 Cartes</button>
+    <button id="tab-prospection" class="on" type="button"><span>🚪</span>Portes</button>
+    <button id="tab-map" type="button"><span>🗺</span>Carte</button>
+    <button id="tab-stats" type="button"><span>📊</span>Stats</button>
+    <button id="tab-cards" type="button"><span>💼</span>Cartes</button>
+    <button id="tab-qr" type="button"><span>🔳</span>QR</button>
   </nav>
   <div id="toast" role="status"></div>
   <script type="module" src="app.js"></script>
