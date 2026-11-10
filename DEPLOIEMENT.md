@@ -99,7 +99,7 @@ Ouvre ensuite l'app **depuis l'icône** : sur iPhone, un site non installé peut
 
 ## Vérifier que c'est la bonne version
 
-Un petit « v16 » (ou plus) s'affiche tout en bas de l'écran Prospection. Après une mise à jour, ferme complètement l'app et rouvre-la une ou deux fois, avec du réseau, pour qu'elle prenne la nouvelle version.
+Un petit « v17 » (ou plus) s'affiche tout en bas de l'écran Prospection. Après une mise à jour, ferme complètement l'app et rouvre-la une ou deux fois, avec du réseau, pour qu'elle prenne la nouvelle version.
 
 Avant de s'en servir pour de vrai, fais ce test de 5 minutes sur le téléphone :
 
@@ -110,7 +110,6 @@ Avant de s'en servir pour de vrai, fais ce test de 5 minutes sur le téléphone 
 - [ ] Exporter en Excel et ouvrir les fichiers.
 - [ ] Onglet Stats : les totaux et le suivi de tournée correspondent à ce que tu as saisi.
 - [ ] Envoi vers le tableau Google (sur une copie) : la ligne du jour apparaît dans le bon onglet et les clients en R1 / R2 dans « Projets ».
-- [ ] Onglet QR : saisir l'adresse du site, scanner le QR code avec un autre téléphone.
 - [ ] Si la sauvegarde en ligne est activée : saisir une porte, attendre « Sauvegardé en ligne », ouvrir l'app sur un 2e appareil et vérifier qu'elle y apparaît.
 - [ ] Mettre le téléphone en mode avion : l'app s'ouvre et la saisie marche.
 
@@ -132,6 +131,10 @@ L'adresse `.pages.dev` est publique, mais non listée, et l'app contient une bal
 - **La première lecture de carte échoue** : elle télécharge le lecteur de texte, il faut du réseau.
 - **Données disparues sur iPhone** : l'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé.
 - **« Mode local : aucun serveur de sauvegarde détecté »** alors que le site est en ligne : ouvre `https://TON-SITE/api/sync` dans le navigateur. Si tu vois `{"worker":true,"db":true,"password":true,...}`, tout est bon. Page d'app ou 404 → `_worker.js` n'est pas à la racine du déploiement. `"db":false` ou `"password":false` → le binding D1 nommé `DB` ou le secret `APP_PASSWORD` manque ; ajoute-le puis **redéploie** (les réglages ne s'appliquent qu'au déploiement suivant).
+
+## Si ton adresse finit par `.workers.dev` (Worker, pas Pages)
+
+Cloudflare ignore alors `_worker.js` : c'est `wrangler.jsonc` (à la racine, fourni) qui branche le serveur. Dans ce fichier, mets l'identifiant de ta base D1 à la place de `REMPLACE-MOI` (Cloudflare > D1 > ta base > « Database ID »), garde `"name"` identique au nom du Worker, puis pousse sur GitHub : le déploiement se relance seul. Le secret `APP_PASSWORD` (Settings > Variables and Secrets) reste en place. Vérifie ensuite `https://TON-SITE/api/sync`.
 
 ## Remettre l'app à zéro après tes tests
 

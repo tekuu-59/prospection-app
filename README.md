@@ -33,12 +33,11 @@ Ouvre l'app depuis l'icône : sur iPhone, un site non installé peut voir ses do
 - **Scanner une carte** : cadre bien la carte, bien éclairée. Corrige les champs, puis *Enregistrer*. Un e-mail déjà présent déclenche un avertissement.
 - **Exporter en Excel** : le fichier se télécharge (`prospection-AAAA-MM-JJ.xlsx`, `contacts-AAAA-MM-JJ.xlsx`). Exporte régulièrement : c'est ta sauvegarde.
 
-## Statistiques, tournée, QR code, sauvegarde en ligne
+## Statistiques, tournée, sauvegarde en ligne
 
 - **Durée de prospection du jour** : deux menus (heures, minutes) sous le gros bouton, comme pour l'heure d'un rendez-vous. L'export Excel a un onglet « Jours » (Date, Durée en minutes, Portes, Clients notés, R1, R2), et les stats donnent le temps total et les portes par heure.
 - **Stats** : portes, clients, R1, R2, taux de rendez-vous, portes par jour (14 derniers jours) et par zone, sur 7 jours, 30 jours ou tout.
 - **Tournée** : dans l'onglet Stats, les zones déjà faites, de la plus ancienne à la plus récente, avec « Reprendre » pour retourner dans une zone.
-- **QR** : affiche l'adresse du site vitrine en QR code à montrer à la porte (adresse modifiable dans l'app, ou dans `config.js`).
 - **Sauvegarde en ligne** (facultative) : voir `DEPLOIEMENT.md`. Elle copie les données dans une base Cloudflare D1 protégée par un mot de passe, et les partage entre appareils.
 
 ## Tableau de bord Google

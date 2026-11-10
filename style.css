@@ -71,9 +71,9 @@ nav button span { display: block; font-size: 20px; }
 .bar em { font-style: normal; font-size: 10px; margin-bottom: 2px; }
 .list .tag { font-size: 12px; color: #55565a; white-space: nowrap; }
 .list .go { font-size: 13px; background: var(--black); color: #fff; border-radius: 8px; padding: 8px 10px; }
-.qr { width: min(72vw, 300px); margin: 8px auto 0; background: #fff; border-radius: 14px; padding: 8px; box-shadow: 0 2px 10px rgba(0,0,0,.1); }
-.qr svg { display: block; width: 100%; height: auto; }
-.qr:empty { display: none; }
-.qr-url { text-align: center; font-weight: 600; word-break: break-all; margin: 12px 0 20px; }
+
+
+
+
 .duree-pick { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 18px; color: var(--black); }
 .duree-pick select { flex: 1; padding: 12px; font-size: 18px; border: 1px solid #d4d4d8; border-radius: 10px; background: var(--card); color: var(--black); }

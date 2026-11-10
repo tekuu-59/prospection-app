@@ -3,9 +3,7 @@ import { parseCard } from './parse-card.js';
 import { read, write } from './store.js';
 import { createSync } from './sync.js';
 import { computeStats, tournee } from './stats.js';
-import { qrSvg } from './qr.js';
 import { formatDuree } from './duree.js';
-import { SITE_URL } from './config.js';
 
 const $ = (id) => document.getElementById(id);
 const today = () => {
@@ -105,7 +103,7 @@ $('sync-form').onsubmit = (ev) => {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) sync.schedule(500); });
 
 // ---------- onglets ----------
-const TABS = [['tab-prospection', 'screen-prospection'], ['tab-map', 'screen-map'], ['tab-stats', 'screen-stats'], ['tab-cards', 'screen-cards'], ['tab-qr', 'screen-qr']];
+const TABS = [['tab-prospection', 'screen-prospection'], ['tab-map', 'screen-map'], ['tab-stats', 'screen-stats'], ['tab-cards', 'screen-cards']];
 for (const [tab, screen] of TABS) {
   $(tab).onclick = () => {
     for (const [t, s] of TABS) {
@@ -114,7 +112,6 @@ for (const [tab, screen] of TABS) {
     }
     if (screen === 'screen-map') showMap();
     if (screen === 'screen-stats') renderStats();
-    if (screen === 'screen-qr') renderQr();
   };
 }
 
@@ -434,28 +431,6 @@ $('send-sheet').onclick = async () => {
     $('send-sheet').disabled = false;
   }
 };
-
-// ---------- QR code du site ----------
-const normUrl = (v) => {
-  const t = v.trim();
-  return !t ? '' : /^https?:\/\//i.test(t) ? t : `https://${t}`;
-};
-const siteUrl = () => normUrl(read('siteUrl', SITE_URL));
-function renderQr() {
-  if (document.activeElement !== $('site-url')) $('site-url').value = read('siteUrl', SITE_URL);
-  const url = siteUrl();
-  try {
-    $('qr').innerHTML = url ? qrSvg(url) : ''; // le SVG ne contient que des chiffres : l'adresse n'y est pas insérée
-    $('qr-url').textContent = url || "Entre l'adresse du site ci-dessous pour afficher son QR code.";
-  } catch {
-    $('qr').innerHTML = '';
-    $('qr-url').textContent = 'Adresse trop longue pour un QR code.';
-  }
-  $('qr-copy').disabled = $('qr-share').disabled = !url;
-}
-$('site-url').oninput = () => { write('siteUrl', $('site-url').value); renderQr(); };
-$('qr-copy').onclick = () => navigator.clipboard?.writeText(siteUrl()).then(() => toast('Lien copié'), () => toast('Copie impossible'));
-$('qr-share').onclick = () => (navigator.share ? navigator.share({ url: siteUrl() }).catch(() => {}) : $('qr-copy').click());
 
 // ---------- cartes de visite ----------
 let tesseractReady;
