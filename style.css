@@ -55,3 +55,8 @@ textarea { font: inherit; resize: vertical; }
 .statut { display: flex; flex-wrap: wrap; gap: 8px; border: 0; padding: 0; margin: 0 0 12px; }
 .statut label { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid #d4d4d8; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
 .statut input { width: 18px; height: 18px; accent-color: var(--red); }
+#map { height: 62vh; min-height: 320px; border-radius: 14px; overflow: hidden; background: #e5e7eb; }
+.chips { display: flex; gap: 8px; margin-bottom: 10px; }
+.chips button { flex: 1; padding: 10px; border: 1px solid #d4d4d8; border-radius: 10px; background: var(--card); font-size: 15px; }
+.chips button.on { background: var(--black); color: #fff; border-color: var(--black); }
+nav button { font-size: 14px; }

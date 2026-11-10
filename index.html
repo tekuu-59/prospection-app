@@ -19,6 +19,7 @@
         <input id="zone" type="text" list="zones" autocomplete="off" placeholder="ex. Centre-ville Évreux">
         <datalist id="zones"></datalist>
       </label>
+      <button id="locate" class="link" type="button">📍 Utiliser ma position</button>
 
       <button id="push" class="push" type="button" aria-label="Une porte de plus">
         <span id="portes">0</span>
@@ -50,6 +51,16 @@
       <button id="export-prospection" class="primary" type="button">Exporter en Excel</button>
     </section>
 
+    <section id="screen-map" hidden>
+      <div class="chips">
+        <button id="map-today" class="on" type="button">Aujourd'hui</button>
+        <button id="map-all" type="button">Tout</button>
+      </div>
+      <div id="map" role="application" aria-label="Carte des zones et clients"></div>
+      <p id="map-status" class="status" role="status"></p>
+      <p class="hint">🟢 R1 · 🟠 R2 · 🔵 client · ◯ rouge : zone</p>
+    </section>
+
     <section id="screen-cards" hidden>
       <label class="primary file">📷 Scanner une carte
         <input id="photo" type="file" accept="image/*" capture="environment" hidden>
@@ -76,11 +87,12 @@
       <button id="export-contacts" class="primary" type="button">Exporter en Excel</button>
     </section>
 
-    <p class="note">Les données restent dans ce téléphone : exporte régulièrement en Excel pour en garder une copie. · v8</p>
+    <p class="note">Les données restent dans ce téléphone : exporte régulièrement en Excel pour en garder une copie. · v9</p>
   </main>
 
   <nav>
     <button id="tab-prospection" class="on" type="button">🚪 Prospection</button>
+    <button id="tab-map" type="button">🗺 Carte</button>
     <button id="tab-cards" type="button">💼 Cartes</button>
   </nav>
   <div id="toast" role="status"></div>

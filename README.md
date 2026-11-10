@@ -33,6 +33,13 @@ Ouvre l'app depuis l'icône : sur iPhone, un site non installé peut voir ses do
 - **Scanner une carte** : cadre bien la carte, bien éclairée. Corrige les champs, puis *Enregistrer*. Un e-mail déjà présent déclenche un avertissement.
 - **Exporter en Excel** : le fichier se télécharge (`prospection-AAAA-MM-JJ.xlsx`, `contacts-AAAA-MM-JJ.xlsx`). Exporte régulièrement : c'est ta sauvegarde.
 
+## Carte et position
+
+- **📍 Utiliser ma position** (sous la zone) : enregistre la position GPS de la zone et, si le champ est vide, le remplit avec le nom de la rue et de la commune.
+- **+ Client prospecté** : la position du téléphone est enregistrée avec le client (si la localisation est autorisée).
+- **Onglet Carte** : repères colorés (vert R1, orange R2, bleu autre, cercle rouge pour une zone), filtre « Aujourd'hui / Tout », et un lien « Ouvrir dans Maps » sur chaque point. L'export Excel des clients a une colonne « Lien carte ».
+- La carte (Leaflet, depuis cdn.jsdelivr.net) et ses fonds (OpenStreetMap) demandent du réseau. Le nom de rue vient du service Nominatim d'OpenStreetMap : la position y est envoyée, à mentionner dans une éventuelle politique de confidentialité.
+
 ## Limites à connaître
 
 - **R1** = rendez-vous pris, **R2** = à repasser plus tard : ce sont des statuts **par client**. Avec « + Client prospecté », on note le client, son statut (aucun, R1 avec date et heure, R2 avec date facultative) et un commentaire. Les compteurs R1 / R2 se calculent tout seuls. L'export a deux onglets : « Prospection » (Date, Zone, Portes, R1, R2) et « Clients » (Date, Zone, Client, Statut, date du RDV, Commentaire).
