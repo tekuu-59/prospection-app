@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#B01F30">
+  <meta name="robots" content="noindex">
+  <title>Prospection</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section id="screen-prospection">
+      <label class="field">Zone de prospection
+        <input id="zone" type="text" list="zones" autocomplete="off" placeholder="ex. Centre-ville Évreux">
+        <datalist id="zones"></datalist>
+      </label>
+
+      <button id="push" class="push" type="button" aria-label="Une porte de plus">
+        <span id="portes">0</span>
+        <small>portes aujourd'hui · cette zone</small>
+      </button>
+      <button id="undo" class="link" type="button">− annuler la dernière porte</button>
+
+      <div class="rdv">
+        <div class="step"><b>R1</b><output id="r1">0</output><span class="sub">rendez-vous</span></div>
+        <div class="step"><b>R2</b><output id="r2">0</output><span class="sub">à repasser</span></div>
+      </div>
+
+      <button id="add-client" class="secondary" type="button">+ Client prospecté</button>
+      <form id="client-form" class="rdv-form" hidden>
+        <label class="field">Client / société <input name="client" autocomplete="off" placeholder="ex. Garage Dupont"></label>
+        <fieldset class="statut">
+          <label><input type="radio" name="statut" value="" checked> Aucun</label>
+          <label><input type="radio" name="statut" value="r1"> R1 · rendez-vous</label>
+          <label><input type="radio" name="statut" value="r2"> R2 · à repasser</label>
+        </fieldset>
+        <label class="field" id="quand-label" hidden><span id="quand-text"></span> <input name="quand" type="datetime-local"></label>
+        <label class="field">Commentaire <textarea name="commentaire" rows="3" placeholder="ex. intéressé par une enseigne, rappeler en janvier"></textarea></label>
+        <div class="row"><button type="button" id="client-cancel" class="secondary">Annuler</button><button type="submit" class="primary">Ajouter</button></div>
+      </form>
+      <ul id="client-list" class="list"></ul>
+
+      <h2>Historique</h2>
+      <ul id="history" class="list"></ul>
+      <button id="export-prospection" class="primary" type="button">Exporter en Excel</button>
+    </section>
+
+    <section id="screen-cards" hidden>
+      <label class="primary file">📷 Scanner une carte
+        <input id="photo" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <p id="status" class="status" role="status"></p>
+
+      <form id="card-form" hidden>
+        <label class="field">Société <input name="societe" autocomplete="off"></label>
+        <label class="field">Prénom <input name="prenom" autocomplete="off"></label>
+        <label class="field">Nom <input name="nom" autocomplete="off"></label>
+        <label class="field">E-mail <input name="email" type="email" inputmode="email" autocomplete="off"></label>
+        <label class="field">Téléphone <input name="telephone" type="tel" autocomplete="off"></label>
+        <label class="field">Site web <input name="siteweb" autocomplete="off"></label>
+        <label class="field">Adresse <input name="adresse" autocomplete="off"></label>
+        <details><summary>Texte lu sur la carte</summary><pre id="raw"></pre></details>
+        <div class="row">
+          <button type="button" id="cancel" class="secondary">Annuler</button>
+          <button type="submit" class="primary">Enregistrer</button>
+        </div>
+      </form>
+
+      <h2>Contacts <span id="count"></span></h2>
+      <ul id="contacts" class="list"></ul>
+      <button id="export-contacts" class="primary" type="button">Exporter en Excel</button>
+    </section>
+
+    <p class="note">Les données restent dans ce téléphone : exporte régulièrement en Excel pour en garder une copie. · v8</p>
+  </main>
+
+  <nav>
+    <button id="tab-prospection" class="on" type="button">🚪 Prospection</button>
+    <button id="tab-cards" type="button">💼 Cartes</button>
+  </nav>
+  <div id="toast" role="status"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
