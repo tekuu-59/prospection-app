@@ -54,3 +54,38 @@ test('site avec espace et adresse sur une ligne', () => {
   assert.equal(r.adresse, '88, avenue des ternes, 75017, Paris');
   assert.equal(r.email, 'martin@photographe.com');
 });
+
+test('carte à deux agences : deux adresses, quelle que soit la lecture OCR', () => {
+  const attendu = '4 Place du Marché, 27000 EVREUX / 111 Avenue des Tilleuls, 79140 LE PETIT QUEVILLY';
+  const colonnes = parseCard(`ozo
+Mathieu BERNARD
+Alain LEFEBVRE
+Agents Généraux
+Agence d'Evreux
+4 Place du Marché
+27000 EVREUX
+Tél. : 02 32 00 00 01
+evreux-centre@ozo.fr
+Agence Petit Quevilly
+111 Avenue des Tilleuls
+79140 LE PETIT QUEVILLY
+Tél. : 02 35 00 00 02
+petit-quevilly@ozo.fr
+N° : 00 000 001 www.orias.fr N° : 00 000 002`);
+  assert.equal(colonnes.adresse, attendu);
+  assert.equal(colonnes.societe, 'ozo');
+  assert.equal(colonnes.prenom, 'Mathieu / Alain');
+  assert.equal(colonnes.nom, 'Bernard / Lefebvre');
+  assert.equal(colonnes.email, 'evreux-centre@ozo.fr');
+  assert.equal(colonnes.telephone, '02 32 00 00 01');
+  const lignes = parseCard(`Agence d'Evreux Agence Petit Quevilly
+4 Place du Marché 111 Avenue des Tilleuls
+27000 EVREUX 79140 LE PETIT QUEVILLY`);
+  assert.equal(lignes.adresse, attendu);
+});
+
+test('texte OCR réel de la carte Ozo : débris devant le nom, deux personnes', () => {
+  const r = parseCard(': Fac”\no>\nad\nA\nu\n; À\nRe\nff Fl p o£\nSy p\n(\nen Mathieu BERNARD\nAlain LEFEBVRE\nVf\n& f pd: yr ÿ of &');
+  assert.equal(r.prenom, 'Mathieu / Alain');
+  assert.equal(r.nom, 'Bernard / Lefebvre');
+});

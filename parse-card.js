@@ -6,7 +6,10 @@ const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/i;
 const URL_RE = /(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(?:com|fr|net|org|eu|io|be|ch)\b/i;
 const PHONE_RE = /(?:\+|00)?\d[\d .\-/()]{7,}\d/g;
 const LABEL_RE = /^(tel|mob|mobile|portable|fax|email|e-mail|mail|web|site|siret|siren|rcs|tva)\b/;
-const STREET_RE = /\b(rue|avenue|av|boulevard|bd|chemin|route|impasse|allee|quai|cours|zone|zac|zi|za|bp|cs)\b/;
+const STREET_RE = /\b(rue|avenue|av|boulevard|bd|chemin|route|impasse|allee|quai|cours|place|square|zone|zac|zi|za|bp|cs)\b/;
+// début d'adresse (« 4 place », « 111 avenue ») et code postal : servent à couper une ligne qui contient deux colonnes
+const STREET_START_RE = /\b\d{1,4}(?:\s?(?:bis|ter))?,?\s+(?:rue|av|avenue|bd|boulevard|chemin|route|impasse|all[ée]e|quai|cours|place|square)\b/gi;
+const POSTCODE_RE = /\b\d{5}\b/g;
 const TITLE_RE =
   /\b(directeur|directrice|dirigeant|gerant|gerante|responsable|president|presidente|pdg|ceo|manager|commercial|commerciale|charge|chargee|assistant|assistante|consultant|consultante|ingenieur|fondateur|fondatrice|associe|associee|proprietaire|conseiller|conseillere|technicien|chef|attache|attachee)\b/;
 const LEGAL_RE =
@@ -73,17 +76,26 @@ function nameFromEmail(email, lines) {
   return null;
 }
 
-// Sans e-mail exploitable : première ligne de 2 ou 3 mots qui commencent par une majuscule
+// Ligne de 2 ou 3 mots qui commencent par une majuscule ; strict : en plus un mot en capitales
+// et un qui ne l'est pas (« Alain LEFEBVRE », pas « Agents Généraux »).
+function asName(line, strict) {
+  const s = strip(line);
+  if (LEGAL_RE.test(s) || TITLE_RE.test(s)) return null;
+  // l'OCR colle parfois un débris en minuscules devant le nom (« en Mathieu BERNARD »)
+  const words = line.replace(/^(?:\p{Ll}\S*\s+)+/u, '').split(' ');
+  if (words.length < 2 || words.length > 3 || line.length > 40) return null;
+  if (!words.every((w) => /^\p{Lu}[\p{L}'’-]+\.?$/u.test(w))) return null;
+  if (strict && !(words.some(isUpper) && !words.every(isUpper))) return null;
+  const nomFirst = isUpper(words[0]) && !isUpper(words[1]); // « DUPONT Jean »
+  const [a, b] = nomFirst ? [words.slice(1), [words[0]]] : [[words[0]], words.slice(1)];
+  return { prenom: nice(a.join(' ')), nom: nice(b.join(' ')), line };
+}
+
+// Sans e-mail exploitable : première ligne qui ressemble à un nom
 function guessName(lines) {
   for (const line of lines) {
-    const s = strip(line);
-    if (LEGAL_RE.test(s) || TITLE_RE.test(s)) continue;
-    const words = line.split(' ');
-    if (words.length < 2 || words.length > 3 || line.length > 40) continue;
-    if (!words.every((w) => /^\p{Lu}[\p{L}'’-]+\.?$/u.test(w))) continue;
-    const nomFirst = isUpper(words[0]) && !isUpper(words[1]); // « DUPONT Jean »
-    const [a, b] = nomFirst ? [words.slice(1), [words[0]]] : [[words[0]], words.slice(1)];
-    return { prenom: nice(a.join(' ')), nom: nice(b.join(' ')), line };
+    const n = asName(line, false);
+    if (n) return n;
   }
   return null;
 }
@@ -93,8 +105,10 @@ function guessCompany(lines, nameLine, email) {
   const domain = email ? strip(email.split('@')[1]).split('.')[0] : '';
   const custom = domain && !FREE_MAIL.has(domain) ? domain : '';
   const compact = (s) => strip(s).replace(/[^a-z0-9]/g, '');
-  if (custom.length >= 4) {
-    const hit = ok.find((l) => compact(l).includes(compact(custom)));
+  if (custom) {
+    // un domaine court (ozo.fr) ne vaut que pour une ligne identique, sinon trop de faux positifs
+    const c = compact(custom);
+    const hit = ok.find((l) => compact(l) === c || (c.length >= 4 && compact(l).includes(c)));
     if (hit) return hit;
   }
   const legal = ok.find((l) => LEGAL_RE.test(strip(l)));
@@ -105,6 +119,28 @@ function guessCompany(lines, nameLine, email) {
 
 const isAddress = (l) => /\b\d{5}\b/.test(l) || (STREET_RE.test(strip(l)) && /\d/.test(l));
 const WEB_RE = /(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|fr|net|org|eu|io|be|ch|info|biz|pro|shop|studio|photo|paris)\b(?:\/\S*)?/i;
+
+// Carte à deux agences : l'OCR lit soit colonne par colonne, soit les deux colonnes sur la même ligne.
+function splitColumns(line) {
+  for (const re of [STREET_START_RE, POSTCODE_RE]) {
+    const starts = [...line.matchAll(re)].map((m) => m.index);
+    if (starts.length > 1) return starts.map((s, i) => line.slice(i ? s : 0, starts[i + 1]).trim());
+  }
+  return [line];
+}
+
+// Une adresse se termine à son code postal ; plusieurs adresses sont séparées par « / ».
+function findAddresses(lines) {
+  const cols = [];
+  for (const line of lines.filter(isAddress)) {
+    splitColumns(line).forEach((part, i) => {
+      const col = (cols[i] ??= [[]]);
+      col.at(-1).push(part.replace(/\s+[-–—]\s+/g, ', '));
+      if (/\b\d{5}\b/.test(part)) col.push([]);
+    });
+  }
+  return cols.flat().filter((a) => a.length).map((a) => a.join(', ')).join(' / ');
+}
 
 function findSite(lines) {
   for (const l of lines) {
@@ -140,14 +176,16 @@ export function parseCard(text) {
   );
 
   const name = (email && nameFromEmail(email, lines)) || guessName(lines);
+  const others = lines.filter((l) => l !== name?.line).map((l) => asName(l, true)).filter(Boolean);
   return {
-    societe: guessCompany(lines, name?.line, email),
-    prenom: name?.prenom ?? '',
-    nom: name?.nom ?? '',
+    societe: guessCompany(lines.filter((l) => !others.some((o) => o.line === l)), name?.line, email),
+    // carte à plusieurs personnes, un seul contact : prénoms et noms dans le même ordre (« Mathieu / Alain », « Bernard / Lefebvre »)
+    prenom: [name, ...others].filter(Boolean).map((n) => n.prenom).join(' / '),
+    nom: [name, ...others].filter(Boolean).map((n) => n.nom).join(' / '),
     email,
     telephone,
     siteweb: findSite(raw),
-    adresse: raw.filter(isAddress).map((l) => l.replace(/\s+[-–—]\s+/g, ', ')).join(', '),
+    adresse: findAddresses(raw),
   };
 }
 

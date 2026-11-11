@@ -24,7 +24,7 @@ let days = read('prospection', []).map((d) => ({ date: d.date, zone: d.zone, por
 let jours = read('jours', []);
 let contacts = read('contacts', []).map((c) => ({ ...c, id: c.id ?? crypto.randomUUID() })); // { id, societe, prenom, nom, email, telephone, siteweb, adresse, date }
 const save = () => {
-  if (!write('prospection', days) || !write('contacts', contacts) || !write('jours', jours)) toast('⚠️ Stockage plein ou bloqué : exporte tes données');
+  if (!write('prospection', days) || !write('contacts', contacts) || !write('jours', jours)) toast('⚠️ Stockage plein ou bloqué : exportez vos données');
   sync.schedule();
 };
 navigator.storage?.persist?.();
@@ -82,7 +82,7 @@ const sync = createSync({
     const text = {
       local: 'Mode local : aucun serveur de sauvegarde détecté',
       unconfigured: '☁️ Serveur trouvé, mais la base ou le mot de passe n\'est pas configuré dans Cloudflare',
-      login: '☁️ Saisis le mot de passe pour activer la sauvegarde en ligne',
+      login: '☁️ Saisissez le mot de passe pour activer la sauvegarde en ligne',
       'bad-password': '☁️ Mot de passe incorrect',
       ok: `☁️ Sauvegardé en ligne · ${detail ? hhmm(detail) : ''}`,
       offline: `☁️ En attente de réseau${detail ? ` · ${detail} modification(s)` : ''}`,
@@ -164,7 +164,7 @@ function renderProspection() {
     del.onclick = () => { e.clients.splice(i, 1); save(); renderProspection(); };
     const tag = c.statut ? `${STATUT[c.statut]}${c.quand ? ' · ' + frWhen(c.quand) : ''}` : '';
     return el('li', {}, el('div', { className: 'main' },
-      el('b', { textContent: c.client || 'Sans nom' }),
+      el('b', { textContent: `${c.heure ? c.heure + ' · ' : ''}${c.client || 'Sans nom'}` }),
       ...(tag ? [el('small', { textContent: tag })] : []),
       ...(c.commentaire ? [el('small', { textContent: c.commentaire })] : [])), del);
   }));
@@ -220,8 +220,8 @@ $('client-cancel').onclick = () => { cf.hidden = true; };
 cf.onsubmit = (ev) => {
   ev.preventDefault();
   const f = cf.elements;
-  const c = { client: f.client.value.trim(), commentaire: f.commentaire.value.trim(), statut: f.statut.value, quand: f.statut.value ? f.quand.value : '', pos: pendingPos ?? undefined };
-  if (!c.client && !c.commentaire) return toast('Note au moins le client ou un commentaire');
+  const c = { heure: hhmm(Date.now()), client: f.client.value.trim(), commentaire: f.commentaire.value.trim(), statut: f.statut.value, quand: f.statut.value ? f.quand.value : '', pos: pendingPos ?? undefined };
+  if (!c.client && !c.commentaire) return toast('Notez au moins le client ou un commentaire');
   entry().clients.push(c);
   save();
   cf.reset();
@@ -232,7 +232,7 @@ $('locate').onclick = async () => {
   $('locate').disabled = true;
   try {
     const pos = await getPos();
-    if (!pos) return toast('Position indisponible : autorise la localisation');
+    if (!pos) return toast('Position indisponible : autorisez la localisation');
     if (!zone()) {
       try { $('zone').value = await streetName(pos); write('zone', $('zone').value); } catch { toast('Nom de rue indisponible (réseau ?)'); }
     }
@@ -324,7 +324,7 @@ async function showMap() {
     }
   }
   if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
-  else $('map-status').textContent = mapAll ? 'Aucun point : autorise la localisation en ajoutant un client, ou touche « 📍 Utiliser ma position ».' : 'Rien aujourd\'hui. Essaie « Tout ».';
+  else $('map-status').textContent = mapAll ? 'Aucun point : autorisez la localisation en ajoutant un client, ou touchez « 📍 Utiliser ma position ».' : 'Rien aujourd\'hui. Essayez « Tout ».';
 }
 for (const [id, all] of [['map-today', false], ['map-all', true]]) {
   $(id).onclick = () => {
@@ -380,7 +380,7 @@ for (const b of document.querySelectorAll('.chips [data-p]')) {
 
 // ---------- effacer les données ----------
 $('reset').onclick = () => {
-  if (prompt('Effacer TOUTES les données (portes, clients, contacts, durées) ?\nSi la sauvegarde en ligne est active, elles seront aussi effacées en ligne.\nTape EFFACER pour confirmer.') !== 'EFFACER') return;
+  if (prompt('Effacer TOUTES les données (portes, clients, contacts, durées) ?\nSi la sauvegarde en ligne est active, elles seront aussi effacées en ligne.\nTapez EFFACER pour confirmer.') !== 'EFFACER') return;
   days = [];
   jours = [];
   contacts = [];
@@ -401,7 +401,7 @@ $('send-sheet').onclick = async () => {
   const out = (t) => { $('send-status').textContent = t; };
   if (!rows.length && !minutesOf(date)) return out('Rien à envoyer pour ce jour.');
   const pw = read('syncPw', '');
-  if (!pw) return out('Active d\'abord la sauvegarde en ligne (mot de passe en bas de l\'écran).');
+  if (!pw) return out('Activez d\'abord la sauvegarde en ligne (mot de passe en bas de l\'écran).');
   const payload = {
     date,
     minutes: minutesOf(date),
@@ -415,7 +415,7 @@ $('send-sheet').onclick = async () => {
   out('Envoi…');
   try {
     const res = await fetch('/api/sheet', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${pw}` }, body: JSON.stringify(payload) });
-    if (res.status === 401) return out('Mot de passe refusé : reconnecte la sauvegarde en ligne.');
+    if (res.status === 401) return out('Mot de passe refusé : reconnectez la sauvegarde en ligne.');
     if (res.status === 503 || res.status === 404 || res.status === 405 || res.status === 501) return out('Envoi vers Google non configuré (voir DEPLOIEMENT.md).');
     const r = await res.json().catch(() => ({}));
     const lines = [];
@@ -426,7 +426,7 @@ $('send-sheet').onclick = async () => {
     if (r.error) lines.push(`⚠️ ${r.error === 'unreachable' || r.error === 'bad_response' ? 'Le script Google ne répond pas correctement' : r.error}`);
     out(`${r.ok ? '✅ Envoyé · ' : ''}${lines.join(' · ') || 'Réponse inattendue.'}`);
   } catch {
-    out('Pas de réseau : réessaie plus tard.');
+    out('Pas de réseau : réessayez plus tard.');
   } finally {
     $('send-sheet').disabled = false;
   }
@@ -471,12 +471,16 @@ $('photo').onchange = async (ev) => {
     const worker = await T.createWorker('fra+eng');
     let text;
     try { ({ data: { text } } = await worker.recognize(canvas)); } finally { await worker.terminate(); }
-    fillForm(parseCard(text), text);
-    $('status').textContent = 'Vérifie les champs, corrige si besoin, puis enregistre.';
+    const card = parseCard(text);
+    fillForm(card, text);
+    // presque toutes les cartes ont un e-mail ou un téléphone : sans les deux, c'est la photo qui pèche
+    $('status').textContent = !card.email && !card.telephone
+      ? '⚠️ Photo peu lisible : ni e-mail ni téléphone trouvés. Reprenez-la de plus près (la carte doit remplir le cadre), sur un fond uni et bien éclairée, ou corrigez les champs à la main.'
+      : 'Vérifiez les champs, corrigez si besoin, puis enregistrez.';
   } catch (e) {
     $('status').textContent = e.message === 'offline'
-      ? 'Connexion nécessaire pour la première lecture. Réessaie avec du réseau.'
-      : 'Lecture impossible. Réessaie avec une photo plus nette, bien éclairée.';
+      ? 'Connexion nécessaire pour la première lecture. Réessayez avec du réseau.'
+      : 'Lecture impossible. Réessayez avec une photo plus nette, bien éclairée.';
   }
 };
 
@@ -495,7 +499,7 @@ $('card-form').onsubmit = (ev) => {
   const f = ev.target.elements;
   const c = { id: crypto.randomUUID(), date: today() };
   for (const k of FIELDS) c[k] = f[k].value.trim();
-  if (!c.email && !c.telephone && !c.nom) return toast('Renseigne au moins un nom, un e-mail ou un téléphone');
+  if (!c.email && !c.telephone && !c.nom) return toast('Renseignez au moins un nom, un e-mail ou un téléphone');
   if (c.email && contacts.some((x) => x.email === c.email.toLowerCase()) && !confirm('Cet e-mail est déjà dans la liste. L\'ajouter quand même ?')) return;
   c.email = c.email.toLowerCase();
   contacts.push(c);
