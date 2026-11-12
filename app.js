@@ -529,13 +529,19 @@ function placeFrame() {
 let camRefused = false;
 $('scan').onclick = async (ev) => {
   loadTesseract().catch(() => {}); // téléchargé pendant le cadrage
-  if (camRefused || !navigator.mediaDevices?.getUserMedia) return; // l'étiquette fait le reste
+  if (!navigator.mediaDevices?.getUserMedia) {
+    $('status').textContent = `Pas de cadre : ce navigateur ne donne pas accès à la caméra${isSecureContext ? '' : ' (adresse non https)'}. Prenez la carte de face, en la faisant remplir la photo.`;
+    return; // l'étiquette ouvre l'appareil photo du téléphone
+  }
+  if (camRefused) return;
   ev.preventDefault();
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false });
-  } catch {
+  } catch (e) {
     camRefused = true;
-    $('status').textContent = 'Caméra refusée : touchez de nouveau « Scanner une carte » pour utiliser l\'appareil photo, carte de face et remplissant la photo.';
+    // la raison exacte aide à dépanner à distance (NotAllowedError = refusée, NotReadableError = occupée…)
+    const why = { NotAllowedError: 'accès refusé (à autoriser dans les réglages du site ou de l\'app)', NotReadableError: 'caméra occupée par une autre app', NotFoundError: 'aucune caméra trouvée' }[e?.name] ?? e?.name ?? 'erreur inconnue';
+    $('status').textContent = `Caméra de l'app indisponible : ${why}. Touchez de nouveau « Scanner une carte » pour utiliser l'appareil photo du téléphone.`;
     return;
   }
   const v = $('cam-video');
@@ -566,6 +572,8 @@ function shoot() {
 $('photo').onchange = (ev) => {
   const file = ev.target.files[0];
   ev.target.value = '';
+  // sans ce message, une photo perdue (Android qui recharge l'app au retour de l'appareil photo) ne se voit pas
+  $('status').textContent = file ? 'Photo reçue…' : 'Aucune photo reçue. Réessayez.';
   if (file) readCard(file);
 };
 
