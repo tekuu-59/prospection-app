@@ -522,14 +522,19 @@ function placeFrame() {
     width: `${(100 * r.w) / v.videoWidth}%`, height: `${(100 * r.h) / v.videoHeight}%`,
   });
 }
-$('scan').onclick = async () => {
+// « Scanner » est une étiquette du champ photo : sans caméra utilisable (http hors localhost, refus),
+// elle ouvre l'appareil photo du téléphone. Safari iOS ignore un clic simulé sur un champ masqué.
+let camRefused = false;
+$('scan').onclick = async (ev) => {
   loadTesseract().catch(() => {}); // téléchargé pendant le cadrage
+  if (camRefused || !navigator.mediaDevices?.getUserMedia) return; // l'étiquette fait le reste
+  ev.preventDefault();
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false });
   } catch {
-    // caméra refusée ou absente ; certains navigateurs bloquent ce clic après le refus, d'où le message
-    $('status').textContent = 'Caméra de l\'app indisponible : prenez la carte de face, en la faisant remplir la photo.';
-    return $('photo').click();
+    camRefused = true;
+    $('status').textContent = 'Caméra refusée : touchez de nouveau « Scanner une carte » pour utiliser l\'appareil photo, carte de face et remplissant la photo.';
+    return;
   }
   const v = $('cam-video');
   v.srcObject = stream;

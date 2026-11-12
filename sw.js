@@ -1,7 +1,7 @@
 // Hors-ligne : l'app est mise en cache à la 1re visite ; les fichiers du lecteur de texte
 // (jsdelivr) sont mis en cache la 1re fois qu'on scanne une carte.
 // Pour publier une nouvelle version, changer VERSION.
-const VERSION = 'v27';
+const VERSION = 'v28';
 const APP = [
   './', 'index.html', 'style.css', 'app.js', 'xlsx.js', 'parse-card.js', 'store.js',
   'sync.js', 'stats.js', 'duree.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
