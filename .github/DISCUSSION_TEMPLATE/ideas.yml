@@ -1,0 +1,14 @@
+title: "[Idée] "
+body:
+  - type: textarea
+    id: besoin
+    attributes:
+      label: Quel est le besoin ?
+      description: La situation sur le terrain, ce qui vous manque ou vous fait perdre du temps.
+    validations:
+      required: true
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Ce que vous proposez
+      description: Facultatif, une idée de solution.

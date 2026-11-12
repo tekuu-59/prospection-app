@@ -1,0 +1,41 @@
+title: "[Question] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant de poster, regardez la section « En cas de souci » du README. N'écrivez jamais votre mot de passe, votre `SHEET_TOKEN` ni de données de clients ici : c'est public.
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Que se passe-t-il ?
+      description: Ce que vous faisiez, ce que vous attendiez, ce qui s'est passé (message d'erreur exact si possible).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version de l'app
+      description: Affichée tout en bas de l'app, par exemple v0.10 (12/11/2026 21h04).
+  - type: dropdown
+    id: etape
+    attributes:
+      label: Où ça bloque ?
+      options:
+        - Installation (GitHub / Cloudflare)
+        - Sauvegarde en ligne
+        - Google Sheet
+        - Utilisation sur le téléphone
+        - Autre
+    validations:
+      required: true
+  - type: input
+    id: telephone
+    attributes:
+      label: Téléphone et navigateur
+      placeholder: iPhone 13, Safari
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Ce qu'affiche VOTRE-ADRESSE/api/sync
+      description: Le texte affiché, par exemple {"worker":true,"db":true,...}. Sans votre adresse.
+      render: json

@@ -131,6 +131,8 @@ Si vous modifiez vous-même le code : changez `VERSION` dans `sw.js` (`v0.9` →
 | Données disparues du téléphone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. Avec la sauvegarde en ligne, entrez le mot de passe pour tout récupérer. |
 | Mot de passe oublié | Changez le secret `APP_PASSWORD` dans Cloudflare, **Deploy**, puis entrez le nouveau sur chaque téléphone. |
 
+Toujours bloqué, ou une idée d'amélioration ? Posez-la dans les [Discussions du projet d'origine](https://github.com/tekuu-59/propection-app/discussions) (pas dans votre fork). C'est public : jamais de mot de passe ni de données clients.
+
 ## Données personnelles
 
 - Les données sont sur le téléphone et dans votre base Cloudflare (D1) : Cloudflare est un sous-traitant à mentionner dans votre politique de confidentialité. Exportez quand même en Excel de temps en temps.
