@@ -79,7 +79,7 @@ Ce que le script écrit :
 
 | Où | Quoi |
 | --- | --- |
-| Onglet du mois (son nom contient « novembre », « décembre »… ; les onglets « Modèle » sont ignorés) | Une ligne par jour, dans le bloc de la bonne semaine (semaine du lundi au dimanche, la semaine 1 contient le 1er du mois), sur la première ligne libre. Type = Prospection. Lieu = Z1 à Z16 si la journée n'a qu'une zone et qu'elle porte ce nom, sinon vide. Durée en minutes. Contacts = nombre de clients notés. R1, R2. Rendez-vous pris = R1. |
+| Onglet du mois (son nom contient « novembre », « décembre »… ; les onglets « Modèle » sont ignorés) | Une ligne par jour, dans le bloc de la bonne semaine (semaine du lundi au dimanche, la semaine 1 contient le 1er du mois), sur la première ligne libre. Type = Prospection. Lieu = Z1 à Z16 si la journée n'a qu'une zone et qu'elle porte ce nom, sinon vide. Durée en minutes. Contacts = nombre de portes poussées (compteur du jour). R1, R2. Rendez-vous pris = R1. |
 | Onglet « Projets » | Une ligne par client en R1 ou R2 : Date, Nom du projet (le client), R (R1 ou R2), Besoin (le commentaire), Date de rendez-vous (si renseignée). Les autres colonnes ne sont pas touchées. |
 
 - Renvoyer le même jour met à jour les mêmes lignes, sans doublon.

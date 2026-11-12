@@ -24,6 +24,16 @@ h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: v
 .primary, .secondary { display: block; width: 100%; padding: 14px; margin-top: 16px; font-size: 16px; font-weight: 600; text-align: center; border: 0; border-radius: 12px; background: var(--black); color: #fff; }
 .primary.file { background: var(--red); }
 .secondary { background: #d4d4d8; color: var(--black); }
+#cam { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: center; padding: 16px; background: #000; color: #fff; }
+#cam[hidden] { display: none; }
+/* la boîte épouse la vidéo (pas de bandes) : le cadre, placé en %, tombe juste sur l'image capturée */
+.cam-view { position: relative; width: fit-content; margin: 0 auto; overflow: hidden; border-radius: 12px; }
+.cam-view video { display: block; max-width: 100%; max-height: 60vh; }
+#cam-frame { position: absolute; border: 3px solid #fff; border-radius: 10px; box-shadow: 0 0 0 100vmax rgba(0,0,0,.55); }
+#cam-frame.presque { border-color: #f59e0b; }
+#cam-frame.ok { border-color: #22c55e; }
+.cam-tip { margin: 12px 0 0; text-align: center; font-weight: 600; }
+.cam-note { margin: 4px 0 0; text-align: center; font-size: 14px; color: #c4c4c8; }
 .row { display: flex; gap: 10px; } .row > * { flex: 1; }
 
 .list { list-style: none; margin: 0; padding: 0; }

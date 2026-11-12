@@ -1,5 +1,5 @@
 import { buildXlsx, XLSX_MIME } from './xlsx.js';
-import { parseCard } from './parse-card.js';
+import { parseCard, skewAngle, cardEdges } from './parse-card.js';
 import { read, write } from './store.js';
 import { createSync } from './sync.js';
 import { computeStats, tournee } from './stats.js';
@@ -405,7 +405,7 @@ $('send-sheet').onclick = async () => {
   const payload = {
     date,
     minutes: minutesOf(date),
-    contacts: rows.reduce((s, d) => s + d.clients.length, 0), // contacts = clients notés
+    contacts: rows.reduce((s, d) => s + d.portes, 0), // contacts = portes poussées (clics du compteur)
     r1: count(rows, 'r1'),
     r2: count(rows, 'r2'),
     zones: rows.map((d) => d.zone).filter(Boolean),
@@ -447,31 +447,147 @@ function loadTesseract() {
   return tesseractReady;
 }
 
-// Réduit la photo (≈1600 px) : plus rapide pour l'OCR, et la photo n'est jamais stockée.
-async function toCanvas(file) {
-  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+// Met la photo à ≈2600 px : à 1600 px, les petites lignes d'une carte (code postal, e-mail) n'étaient
+// plus lues. Une petite image est agrandie au plus ×2 (au-delà, les artefacts deviennent du texte).
+// deg : redresse une carte photographiée de biais, en une seule interpolation depuis l'original.
+// La photo n'est jamais stockée.
+function toCanvas(bmp, deg = 0, size = 2600) {
+  const k = Math.min(2, size / Math.max(bmp.width, bmp.height));
+  const w = bmp.width * k, h = bmp.height * k, r = (deg * Math.PI) / 180;
   const c = document.createElement('canvas');
-  c.width = Math.round(bmp.width * k);
-  c.height = Math.round(bmp.height * k);
-  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  c.width = Math.round(Math.abs(w * Math.cos(r)) + Math.abs(h * Math.sin(r)));
+  c.height = Math.round(Math.abs(w * Math.sin(r)) + Math.abs(h * Math.cos(r)));
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate(-r);
+  ctx.drawImage(bmp, -w / 2, -h / 2, w, h);
   return c;
 }
 
-$('photo').onchange = async (ev) => {
+// Caméra dans l'app avec un cadre au format carte (85 × 55 mm) : seul l'intérieur du cadre est lu,
+// le fond (table, journal) ne pollue plus la lecture. Sans caméra utilisable : appareil photo du téléphone.
+// Comme pour un passeport, la photo est prise toute seule quand la carte est bien cadrée et immobile.
+const CARD = 85 / 55;
+const MARGE = 0.1; // autour du cadre, où l'on cherche le bord de la carte (le cadre laisse 10 % de chaque côté)
+const frameRect = (vw, vh) => {
+  const w = Math.min(0.8 * vw, 0.8 * vh * CARD);
+  return { x: (vw - w) / 2, y: (vh - w / CARD) / 2, w, h: w / CARD };
+};
+let stream, timer, prev, good;
+function closeCam() {
+  clearTimeout(timer);
+  stream?.getTracks().forEach((t) => t.stop());
+  stream = null;
+  $('cam').hidden = true;
+}
+// 4 fois par seconde : bords alignés sur au moins 3 côtés et image immobile, 3 fois de suite → photo
+const watchCanvas = document.createElement('canvas');
+function watch() {
+  const v = $('cam-video');
+  if (!stream) return;
+  if (v.videoWidth) {
+    const r = frameRect(v.videoWidth, v.videoHeight);
+    watchCanvas.width = 240;
+    watchCanvas.height = Math.round(240 / CARD);
+    const ctx = watchCanvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(v, r.x - MARGE * r.w, r.y - MARGE * r.h, r.w * (1 + 2 * MARGE), r.h * (1 + 2 * MARGE), 0, 0, watchCanvas.width, watchCanvas.height);
+    const img = ctx.getImageData(0, 0, watchCanvas.width, watchCanvas.height);
+    const edges = cardEdges(img, MARGE);
+    let moved = Infinity;
+    if (prev) {
+      moved = 0;
+      for (let i = 0; i < img.data.length; i += 16) moved += Math.abs(img.data[i] - prev[i]);
+      moved /= img.data.length / 16;
+    }
+    prev = img.data;
+    good = edges >= 3 && moved < 8 ? good + 1 : 0;
+    $('cam-frame').className = edges >= 3 ? 'ok' : edges === 2 ? 'presque' : '';
+    $('cam-tip').textContent = edges >= 3 ? 'Ne bougez plus…'
+      : edges === 2 ? 'Presque : alignez les bords de la carte sur le cadre, de face.'
+      : 'Approchez la carte, à plat et de face : ses bords doivent toucher le cadre.';
+    if (good >= 3) {
+      navigator.vibrate?.(60);
+      return shoot();
+    }
+  }
+  timer = setTimeout(watch, 250);
+}
+function placeFrame() {
+  const v = $('cam-video');
+  const r = frameRect(v.videoWidth, v.videoHeight);
+  Object.assign($('cam-frame').style, {
+    left: `${(100 * r.x) / v.videoWidth}%`, top: `${(100 * r.y) / v.videoHeight}%`,
+    width: `${(100 * r.w) / v.videoWidth}%`, height: `${(100 * r.h) / v.videoHeight}%`,
+  });
+}
+$('scan').onclick = async () => {
+  loadTesseract().catch(() => {}); // téléchargé pendant le cadrage
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false });
+  } catch {
+    // caméra refusée ou absente ; certains navigateurs bloquent ce clic après le refus, d'où le message
+    $('status').textContent = 'Caméra de l\'app indisponible : prenez la carte de face, en la faisant remplir la photo.';
+    return $('photo').click();
+  }
+  const v = $('cam-video');
+  v.srcObject = stream;
+  v.onresize = placeFrame; // rotation du téléphone
+  $('cam').hidden = false;
+  await v.play();
+  placeFrame();
+  prev = null;
+  good = 0;
+  watch();
+};
+$('cam-cancel').onclick = closeCam;
+// prise manuelle toujours possible : carte blanche sur fond blanc, bords non détectés
+$('cam-shot').onclick = shoot;
+function shoot() {
+  const v = $('cam-video');
+  if (!v.videoWidth) return;
+  const r = frameRect(v.videoWidth, v.videoHeight);
+  const c = document.createElement('canvas');
+  c.width = Math.round(r.w);
+  c.height = Math.round(r.h);
+  c.getContext('2d').drawImage(v, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
+  closeCam();
+  readCard(c);
+}
+
+$('photo').onchange = (ev) => {
   const file = ev.target.files[0];
   ev.target.value = '';
-  if (!file) return;
+  if (file) readCard(file);
+};
+
+async function readCard(source) {
   $('card-form').hidden = true;
   try {
     $('status').textContent = 'Chargement du lecteur de texte…';
     const T = await loadTesseract();
-    const canvas = await toCanvas(file);
+    const bmp = await createImageBitmap(source, { imageOrientation: 'from-image' });
     $('status').textContent = 'Lecture de la carte… (la 1re fois, c\'est plus long)';
     const worker = await T.createWorker('fra+eng');
-    let text;
-    try { ({ data: { text } } = await worker.recognize(canvas)); } finally { await worker.terminate(); }
-    const card = parseCard(text);
+    // Carte de biais : une lecture redressée puis une droite, analysées ensemble. Une photo prise en
+    // perspective n'a pas un seul angle (le haut et le bas de la carte diffèrent) : chaque lecture
+    // rattrape des lignes que l'autre rate.
+    const small = toCanvas(bmp, 0, 600);
+    const deg = skewAngle(small.getContext('2d').getImageData(0, 0, small.width, small.height));
+    const reads = [];
+    try {
+      if (Math.abs(deg) >= 3) reads.push((await worker.recognize(toCanvas(bmp, deg))).data);
+      reads.push((await worker.recognize(toCanvas(bmp))).data);
+    } finally { await worker.terminate(); }
+    const text = reads.map((d) => d.text).join('\n');
+    // le fond (table, journal), le logo et le QR code donnent des débris lus avec une faible confiance ;
+    // les deux textes sont construits ligne pour ligne pour que parseCard puisse les rapprocher
+    const lines = reads.flatMap((d) => d.lines ?? []);
+    const words = (l, min) => l.words.filter((w) => w.confidence >= min).map((w) => w.text).join(' ');
+    const card = lines.length
+      ? parseCard(lines.map((l) => words(l, 0)).join('\n'), lines.map((l) => words(l, 60)).join('\n'))
+      : parseCard(text);
     fillForm(card, text);
     // presque toutes les cartes ont un e-mail ou un téléphone : sans les deux, c'est la photo qui pèche
     $('status').textContent = !card.email && !card.telephone
@@ -482,7 +598,7 @@ $('photo').onchange = async (ev) => {
       ? 'Connexion nécessaire pour la première lecture. Réessayez avec du réseau.'
       : 'Lecture impossible. Réessayez avec une photo plus nette, bien éclairée.';
   }
-};
+}
 
 const FIELDS = ['societe', 'prenom', 'nom', 'email', 'telephone', 'siteweb', 'adresse'];
 function fillForm(card, rawText) {

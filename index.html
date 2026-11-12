@@ -93,9 +93,15 @@
     </section>
 
     <section id="screen-cards" hidden>
-      <label class="primary file">📷 Scanner une carte
-        <input id="photo" type="file" accept="image/*" capture="environment" hidden>
-      </label>
+      <button id="scan" class="primary file" type="button">📷 Scanner une carte</button>
+      <input id="photo" type="file" accept="image/*" capture="environment" hidden>
+      <div id="cam" hidden>
+        <div class="cam-view"><video id="cam-video" playsinline muted></video><div id="cam-frame"></div></div>
+        <p id="cam-tip" class="cam-tip" aria-live="polite">Approchez la carte, à plat et de face : ses bords doivent toucher le cadre.</p>
+        <p class="cam-note">La photo se prend toute seule quand le cadre passe au vert.</p>
+        <button id="cam-shot" class="primary file" type="button">Prendre la photo maintenant</button>
+        <button id="cam-cancel" class="secondary" type="button">Annuler</button>
+      </div>
       <p id="status" class="status" role="status"></p>
 
       <form id="card-form" hidden>
@@ -118,7 +124,7 @@
       <button id="export-contacts" class="primary" type="button">Exporter en Excel</button>
     </section>
 
-    <p class="note">Les données sont enregistrées dans ce téléphone et, si la sauvegarde en ligne est activée, sur votre espace Cloudflare. Exportez aussi en Excel de temps en temps. · v18</p>
+    <p class="note">Les données sont enregistrées dans ce téléphone et, si la sauvegarde en ligne est activée, sur votre espace Cloudflare. Exportez aussi en Excel de temps en temps. · v27</p>
     <p class="note"><button id="reset" class="link inline" type="button">Effacer toutes les données…</button></p>
     <p class="note"><span id="sync-status"></span> <button id="sync-now" class="link inline" type="button" hidden>Synchroniser</button></p>
     <form id="sync-form" class="rdv-form" hidden>

@@ -13,7 +13,7 @@ PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans bui
 
 ## Règles du produit
 - R1 = rendez-vous pris (avec date), R2 = à repasser (date facultative). Statuts **par client**, pas par zone.
-- Export Google : Type toujours « Prospection », une ligne par jour, Contacts = clients notés.
+- Export Google : Type toujours « Prospection », une ligne par jour, Contacts = nombre de portes poussées (compteur), pas les clients notés.
 
 ## Pièges rencontrés
 - Variables et secrets : bloc **Runtime** du Worker (pas Build). Un secret n'est pris en compte qu'après un déploiement.

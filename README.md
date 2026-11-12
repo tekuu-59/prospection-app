@@ -60,7 +60,7 @@ Ouvre l'app depuis l'icône, entre le mot de passe en bas de l'écran une seule 
 2. **Chaque porte** : un appui sur le gros bouton. « − annuler » retire la dernière.
 3. **Client rencontré** : « + Client prospecté », nom, statut (Aucun, R1 avec date et heure, R2 avec ou sans date), commentaire.
 4. **Durée du jour** : deux menus, heures puis minutes.
-5. **Carte de visite** : onglet Cartes, **Scanner**, vérifie les champs, **Enregistrer**. La première lecture a besoin de réseau (téléchargement unique du lecteur de texte).
+5. **Carte de visite** : onglet Cartes, **Scanner** : la caméra s'ouvre avec un cadre, place la carte de face pour que ses bords touchent le cadre, la photo se prend toute seule quand le cadre passe au vert (ou **Prendre la photo maintenant** ; seul l'intérieur du cadre est lu). Vérifie les champs, **Enregistrer**. La première lecture a besoin de réseau (téléchargement unique du lecteur de texte). Si la caméra est refusée, l'appareil photo du téléphone s'ouvre à la place.
 6. **Fin de journée** : **Exporter en Excel**, ou **Envoyer vers le tableau** si le Google Sheet est branché.
 
 Les données sont sur le téléphone **et** sur ton Cloudflare. Exporte quand même en Excel de temps en temps.
