@@ -1,121 +1,143 @@
-# Prospection : l'app terrain pour la franchise
+# Prospection : l'app terrain des franchisés
 
-Une app à installer sur le téléphone pour la prospection en porte-à-porte. Gratuite, sans compte à créer pour les utilisateurs, avec un compte Cloudflare (gratuit) pour la mettre en ligne.
+Une app pour téléphone qui sert à la prospection en porte-à-porte. Chaque franchisé installe **sa propre copie** : sa base de données, son mot de passe, ses données. Personne ne voit celles des autres.
 
-**Ce qu'elle fait**
+Coût : 0 € (comptes gratuits GitHub et Cloudflare). Mise en place : environ 20 minutes, une seule fois, sans rien installer sur l'ordinateur.
 
-| Écran | À quoi ça sert |
+## Ce que fait l'app
+
+| Écran | À quoi il sert |
 | --- | --- |
-| 🚪 Portes | Un gros bouton qui compte les portes. Zone, durée du jour, clients prospectés avec leur statut **R1** (rendez-vous pris) ou **R2** (à repasser), commentaires, historique. |
-| 🗺 Carte | Les zones et les clients sur une carte (vert R1, orange R2). |
-| 📊 Stats | Portes, rendez-vous, taux de transformation, portes par heure, zones déjà faites. |
-| 💼 Cartes | Photo d'une carte de visite : société, nom, e-mail, téléphone, site et adresse sont lus et pré-remplis. Export pour un mailing. |
+| 🚪 **Portes** | Un gros bouton compte chaque porte poussée (« − annuler » retire la dernière). Vous y notez la zone (tapée ou trouvée par GPS), la durée de la journée, et les clients rencontrés avec un commentaire et un statut : **R1** = rendez-vous pris (date et heure obligatoires, bouton 📅 pour l'ajouter à Google Agenda), **R2** = à repasser (date facultative). En bas : l'historique des jours, l'export Excel et l'envoi vers le tableau de bord Google. |
+| 🗺 **Carte** | Les zones et les clients sur une carte (vert = R1, orange = R2, bleu = sans statut), pour aujourd'hui ou pour tout l'historique. |
+| 📊 **Stats** | Sur 7 jours, 30 jours ou tout : portes, clients, R1, R2, temps passé, portes par heure, taux de rendez-vous, portes par jour, résultats par zone, et les zones déjà faites (pour la tournée). |
+| 💼 **Cartes** | Photo d'une carte de visite : la société, le nom, l'e-mail, le téléphone, le site et l'adresse sont lus et pré-remplis. Vous vérifiez, vous enregistrez. Export Excel des contacts pour un mailing. |
 
-Plus : export Excel, sauvegarde en ligne entre appareils, et envoi du jour dans le tableau de bord Google Sheet.
+Toujours en bas de l'écran : l'état de la sauvegarde en ligne et le numéro de version.
 
 ---
 
-## Installer sa propre copie (environ 20 minutes, une seule fois)
+## Mettre en place sa copie
 
-Chaque franchisé a **sa propre copie**, avec sa base et son mot de passe : personne ne voit les données des autres.
+Il vous faut un compte [GitHub](https://github.com) et un compte [Cloudflare](https://dash.cloudflare.com/sign-up) (gratuits). Activez la double authentification sur les deux.
 
-Il te faut : un compte [GitHub](https://github.com) et un compte [Cloudflare](https://cloudflare.com) (gratuits). Active la double authentification sur les deux.
+### 1. Copier le projet sur votre GitHub (fork)
 
-### 1. Faire un fork sur ton GitHub
-1. Sur la page GitHub de ce projet, clique sur **Fork**, puis **Create fork**. Tu obtiens ta propre copie, qui reste liée à l'original pour recevoir les mises à jour.
-2. Vérifie à la racine de ta copie, à côté de `index.html` : `wrangler.jsonc`, `.assetsignore`, `_worker.js`.
-
-Tu n'as pas de compte GitHub à l'aise avec les forks ? Télécharge le zip, crée un dépôt vide et envoie-y les fichiers (les fichiers qui commencent par un point sont masqués sur Mac et Linux : ils doivent apparaître dans la liste sur GitHub). Tu perdras seulement le bouton de mise à jour.
+1. Sur la page GitHub de ce projet, cliquez sur **Fork**, puis **Create fork**.
+2. Votre copie est publique, comme l'original. Ce n'est pas un problème : aucune donnée ni aucun mot de passe n'y est stocké (ils sont chez Cloudflare). **N'écrivez jamais votre mot de passe dans un fichier du dépôt.**
 
 ### 2. Créer la base de données
-1. Cloudflare : **Storage & Databases**, **D1**, **Create database**, nom `prospection`.
-2. Ouvre-la, onglet **Console**, colle le contenu du fichier `schema.sql`, **Execute**.
-3. Copie son **Database ID** (un long identifiant, pas le nom).
 
-### 3. Renseigner l'identifiant
-Dans `wrangler.jsonc` sur GitHub (crayon pour modifier), remplace `REMPLACE-MOI` par ton Database ID. Garde les guillemets. Si tu changes `"name"`, il doit être identique au nom du Worker créé à l'étape suivante.
+1. Cloudflare : **Storage & Databases**, **D1 SQL Database**, **Create database**, nom `prospection`.
+2. Ouvrez-la, onglet **Console** : collez le contenu du fichier [`schema.sql`](schema.sql), puis **Execute**.
+3. Copiez son **Database ID** (un long identifiant du type `3940d0da-…`, pas le nom).
 
-### 4. Publier le site
-1. Cloudflare : **Workers & Pages**, **Create**, **Import a repository** (Git), choisis `prospection-app`.
-2. Laisse la commande de build vide, valide. Au bout d'une ou deux minutes, tu obtiens une adresse `https://….workers.dev`.
-3. Cette adresse est **définitive** : les données du téléphone sont liées à elle. Choisis le nom une fois pour toutes.
+### 3. Régler `wrangler.jsonc`
+
+Dans votre fork sur GitHub, ouvrez `wrangler.jsonc`, cliquez sur le crayon, et changez deux valeurs (gardez les guillemets) :
+
+- `"name"` : le nom de votre app, en minuscules et tirets, par exemple `prospection-rouen`. Il donnera l'adresse `https://prospection-rouen.VOTRE-COMPTE.workers.dev`. **Cette adresse est définitive** : les données du téléphone y sont liées, un changement d'adresse les fait disparaître du téléphone.
+- `"database_id"` : remplacez l'identifiant présent (celui du franchisé d'origine) par **le vôtre**.
+
+Puis **Commit changes**.
+
+### 4. Publier sur Cloudflare
+
+1. Cloudflare : **Workers & Pages**, **Create**, **Import a repository**. Autorisez GitHub et choisissez votre fork.
+2. **Project name** : exactement le même nom que `"name"` à l'étape 3.
+3. Laissez **Build command** vide et **Deploy command** à `npx wrangler deploy`. Validez.
+4. Au bout d'une ou deux minutes, l'adresse `https://….workers.dev` s'affiche.
 
 ### 5. Choisir le mot de passe
-Dans le Worker : **Settings**, **Variables and Secrets** (le bloc **Runtime**, pas celui de Build), **Add**, type **Secret**, nom `APP_PASSWORD`, valeur : une longue phrase de passe (16 caractères ou plus). Clique sur **Deploy**.
+
+Dans le Worker : **Settings**, **Variables and Secrets** (le bloc **Runtime**, pas celui de Build), **Add**, type **Secret**, nom `APP_PASSWORD`, valeur : une longue phrase de passe (16 caractères ou plus). Puis **Deploy** : un secret n'est pris en compte qu'après un déploiement.
 
 ### 6. Vérifier
-Ouvre `https://TON-ADRESSE/api/sync`. Tu dois voir `"worker":true,"db":true,"password":true`. Sinon, voir « En cas de souci » plus bas.
 
-### 7. Installer sur le téléphone
-- **iPhone (Safari)** : Partager, **Sur l'écran d'accueil**.
-- **Android (Chrome)** : menu ⋮, **Installer l'application**.
+Ouvrez `https://VOTRE-ADRESSE/api/sync` dans un navigateur. Vous devez voir `"worker":true,"db":true,"password":true`. Sinon, voir « En cas de souci ».
 
-Ouvre l'app depuis l'icône, entre le mot de passe en bas de l'écran une seule fois : « ☁️ Sauvegardé en ligne » s'affiche. Fais pareil sur chaque appareil.
+### 7. Installer l'app sur le téléphone
+
+L'app est une PWA : elle s'installe depuis le navigateur, sans passer par l'App Store ni le Play Store.
+
+1. Ouvrez votre adresse `https://….workers.dev` sur le téléphone.
+2. **iPhone** (avec **Safari** obligatoirement) : bouton Partager, **Sur l'écran d'accueil**.
+   **Android** (Chrome) : menu ⋮, **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
+3. Ouvrez l'app **depuis l'icône** (sur iPhone, un site non installé peut voir ses données effacées par le système).
+4. En bas de l'écran Portes, entrez le mot de passe une seule fois : « ☁️ Sauvegardé en ligne » s'affiche.
+5. Acceptez la localisation (carte, nom de rue) et l'appareil photo (cartes de visite).
+
+Faites de même sur chaque appareil : ils partagent les mêmes données. L'app marche aussi sans réseau et envoie les modifications au retour du réseau.
+
+### 8. Test de 5 minutes avant le terrain
+
+- [ ] Le bouton compte, « − annuler » retire une porte.
+- [ ] Un client en R1 avec date s'enregistre, et 📅 ouvre Google Agenda.
+- [ ] « 📍 Utiliser ma position » remplit la zone, l'onglet Carte montre le point.
+- [ ] Scanner 2 ou 3 vraies cartes de visite et vérifier chaque champ.
+- [ ] Exporter en Excel et ouvrir le fichier.
+- [ ] Saisir une porte, attendre « Sauvegardé en ligne », vérifier qu'elle apparaît sur un 2e appareil.
+- [ ] En mode avion, l'app s'ouvre et la saisie marche.
+
+Après les tests, remettez à zéro : tout en bas de l'app, **Effacer toutes les données…**, tapez `EFFACER` (efface le téléphone et la sauvegarde en ligne).
 
 ---
 
-## Utiliser l'app au quotidien
+## Brancher le tableau de bord Google Sheet (facultatif, 10 minutes)
 
-1. **Zone** : tape son nom, ou « 📍 Utiliser ma position ».
-2. **Chaque porte** : un appui sur le gros bouton. « − annuler » retire la dernière.
-3. **Client rencontré** : « + Client prospecté », nom, statut (Aucun, R1 avec date et heure, R2 avec ou sans date), commentaire.
-4. **Durée du jour** : deux menus, heures puis minutes.
-5. **Carte de visite** : onglet Cartes, **Scanner** : la caméra s'ouvre avec un cadre, place la carte de face pour que ses bords touchent le cadre, la photo se prend toute seule quand le cadre passe au vert (ou **Prendre la photo maintenant** ; seul l'intérieur du cadre est lu). Vérifie les champs, **Enregistrer**. La première lecture a besoin de réseau (téléchargement unique du lecteur de texte). Si la caméra est refusée, l'appareil photo du téléphone s'ouvre à la place.
-6. **Fin de journée** : **Exporter en Excel**, ou **Envoyer vers le tableau** si le Google Sheet est branché.
+Le bouton **📤 Envoyer vers le tableau** (écran Portes, en bas) écrit une journée dans votre Google Sheet. Prérequis : la sauvegarde en ligne marche. **Faites le premier essai sur une copie du tableau.**
 
-Les données sont sur le téléphone **et** sur ton Cloudflare. Exporte quand même en Excel de temps en temps.
+1. **Coller le script.** Dans le Google Sheet : **Extensions**, **Apps Script**. Supprimez le code d'exemple, collez le contenu de [`apps-script/Code.gs`](apps-script/Code.gs), **Enregistrer**.
+2. **Choisir un jeton.** Roue dentée **Paramètres du projet**, **Propriétés du script**, **Ajouter** : nom `TOKEN`, valeur : une longue phrase différente du mot de passe de l'app.
+3. **Publier le script.** **Déployer**, **Nouveau déploiement**, type **Application Web**, « Exécuter en tant que » : **Moi**, « Qui a accès » : **Tout le monde**. Autorisez l'accès (si Google affiche « application non validée » : **Paramètres avancés**, puis **Accéder à…**). Copiez l'adresse qui finit par `/exec`.
+4. **Donner l'adresse à Cloudflare.** Dans le Worker, **Settings**, **Variables and Secrets** (bloc **Runtime**), deux **Secrets** : `SHEET_SCRIPT_URL` (l'adresse `/exec`) et `SHEET_TOKEN` (la même phrase que `TOKEN`). Puis **Deploy**. `/api/sync` doit maintenant afficher `"sheet":true`.
+5. **Envoyer.** Dans l'app, choisissez le jour et touchez **Envoyer vers le tableau**. Renvoyer le même jour met à jour sans doublon.
 
-## Brancher le Google Sheet (facultatif, 10 minutes)
+Ce que le script écrit :
 
-Le bouton **📤 Envoyer vers le tableau** (écran Portes, tout en bas) écrit la journée dans ton tableau de bord : une ligne « synthèse du jour » dans l'onglet du mois, et les clients en R1 ou R2 dans l'onglet « Projets ». Prérequis : la sauvegarde en ligne fonctionne (étapes 1 à 7). **Fais le premier essai sur une copie du tableau.**
+| Où | Quoi |
+| --- | --- |
+| Onglet du mois (son nom contient « novembre », « décembre »… ; les onglets « Modèle » sont ignorés) | Une ligne par jour, dans le bloc de la bonne semaine. Type = Prospection, Lieu = la zone si elle s'appelle Z1 à Z16, Durée en minutes, Contacts = nombre de portes poussées, R1, R2, Rendez-vous pris = R1. |
+| Onglet « Projets » | Une ligne par client en R1 ou R2 : Date, Nom du projet, R, Besoin (le commentaire), Date de rendez-vous. |
 
-1. **Coller le script.** Ouvre ton Google Sheet, **Extensions**, **Apps Script**. Supprime le code d'exemple, colle le contenu de `apps-script/Code.gs` (dans ce dépôt), puis **Enregistrer**.
-2. **Choisir un jeton.** Dans Apps Script : roue dentée **Paramètres du projet**, **Propriétés du script**, **Ajouter** : nom `TOKEN`, valeur : une longue phrase différente du mot de passe de l'app. Enregistre.
-3. **Publier le script.** **Déployer**, **Nouveau déploiement**, type **Application Web**. « Exécuter en tant que » : **Moi**. « Qui a accès » : **Tout le monde**. Valide et autorise l'accès (si Google affiche « application non validée » : **Paramètres avancés**, puis **Accéder à…**). Copie l'adresse qui finit par `/exec`.
-4. **Donner l'adresse à Cloudflare.** Dans ton Worker : **Settings**, **Variables and Secrets** (bloc **Runtime**), ajoute deux **Secrets** :
-   - `SHEET_SCRIPT_URL` : l'adresse `/exec` ;
-   - `SHEET_TOKEN` : la même phrase que `TOKEN`.
+Le tableau doit suivre le modèle du réseau : colonnes titrées Date, Type, Lieu, Durée, Contacts, R1, R2, Rendez-vous pris (déplaçables, pas renommables), et un onglet « Projets ». Les lignes de synthèse et de performance ne sont jamais modifiées. Si le tableau appartient à un Google Workspace qui interdit l'accès « Tout le monde », essayez depuis une copie sur un compte personnel.
 
-   Puis **Deploy**. Vérifie `https://TON-ADRESSE/api/sync` : tu dois voir `"sheet":true`.
-5. **Envoyer.** Dans l'app, choisis le jour (aujourd'hui par défaut) et touche **Envoyer vers le tableau**. Un message indique l'onglet et la ligne remplis. Renvoyer le même jour met à jour sans doublon.
+**Après une modification du script** : **Déployer**, **Gérer les déploiements**, crayon, **Nouvelle version**, sinon l'adresse garde l'ancien code.
 
-**Ton tableau doit avoir** un onglet par mois (son nom contient « novembre », « décembre »…) avec des colonnes titrées Date, Type, Lieu, Durée, Contacts, R1, R2, Rendez-vous pris, et un onglet « Projets ». Les colonnes peuvent être déplacées, pas renommées.
+---
 
-**Si tu modifies le script plus tard** : **Déployer**, **Gérer les déploiements**, crayon, **Nouvelle version**. Sinon l'adresse garde l'ancien code.
+## Recevoir les mises à jour
 
-Détails (ce qui est écrit où, cas particuliers, Workspace d'entreprise) : `DEPLOIEMENT.md`.
+1. Sur votre fork GitHub : **Sync fork**, puis **Update branch**. Cloudflare republie tout seul.
+2. En cas de conflit sur `wrangler.jsonc` : gardez **votre** version (votre nom et votre Database ID).
+3. Sur le téléphone : fermez complètement l'app et rouvrez-la, deux fois si besoin. La version et sa date s'affichent tout en bas (par exemple `v0.9 (12/11/2026 21h04)`).
 
-## Mettre à jour l'app
-
-- **Modifier un fichier** : modifie-le sur GitHub, commit, le site se republie tout seul. Si tu touches au code, change `VERSION` dans `sw.js` (`v17` en `v18`) pour que les téléphones prennent la nouvelle version.
-- **Recevoir une nouvelle version de ce projet** : sur ton fork, clique sur **Sync fork**, puis **Update branch**. S'il signale un conflit sur `wrangler.jsonc`, garde **ta** version (elle contient ton Database ID). Cloudflare republie tout seul. Sans fork : remplace les fichiers à la main, **sauf** `wrangler.jsonc`.
-- Ferme complètement l'app et rouvre-la, deux fois si besoin : la version s'affiche en bas.
-
-## Repartir de zéro après des tests
-
-- Dans l'app, tout en bas : **Effacer toutes les données…**, taper `EFFACER`. Efface le téléphone et la sauvegarde en ligne.
-- Base seulement : D1, Console, `DELETE FROM records;`
+Si vous modifiez vous-même le code : changez `VERSION` dans `sw.js` (`v0.9` → `v0.10`) et le numéro affiché en bas de `index.html`, sinon les téléphones gardent l'ancienne version.
 
 ## En cas de souci
 
 | Symptôme | Cause probable |
 | --- | --- |
-| « Mode local : aucun serveur… » | `_worker.js` ou `wrangler.jsonc` manquant à la racine du dépôt. |
-| « Serveur trouvé, mais la base ou le mot de passe n'est pas configuré » | Ouvre `/api/sync` : `"db":false` = mauvais Database ID ; `"password":false` = secret absent du bloc **Runtime**, ou pas redéployé. |
-| Erreur de build « Uploading a Pages _worker.js » | `.assetsignore` absent du dépôt. |
-| Erreur « must have a valid database_id » | `REMPLACE-MOI` toujours dans `wrangler.jsonc`. |
-| L'ancienne version reste affichée | Fermer l'app complètement et la rouvrir. |
-| La caméra ne s'ouvre pas | Autoriser l'appareil photo dans les réglages du téléphone ; l'adresse doit être en `https://`. |
-| « Envoi vers Google non configuré » | `"sheet":false` sur `/api/sync` : les secrets `SHEET_SCRIPT_URL` et `SHEET_TOKEN` manquent dans le bloc **Runtime**, ou pas redéployé. |
-| « ⚠️ … unauthorized » ou « Le script Google ne répond pas correctement » | `SHEET_TOKEN` différent de `TOKEN`, ou le déploiement Apps Script n'est pas en accès « Tout le monde » / pas en nouvelle version. |
-| Données disparues sur iPhone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. |
-
-Détails et captures de la procédure : `DEPLOIEMENT.md`.
+| Erreur de build sur `database_id` ou « database not found » | `"database_id"` dans `wrangler.jsonc` n'est pas celui de **votre** base. |
+| Erreur de build sur le nom du Worker | `"name"` dans `wrangler.jsonc` différent du nom du projet Cloudflare. |
+| « Mode local : aucun serveur… » | Ouvrez `/api/sync` : si la page de l'app s'affiche, le déploiement n'a pas pris `wrangler.jsonc` (vérifiez qu'il est à la racine du fork). |
+| « Serveur trouvé, mais la base ou le mot de passe n'est pas configuré » | Sur `/api/sync` : `"db":false` = mauvais Database ID ; `"password":false` = secret absent du bloc **Runtime**, ou pas redéployé. |
+| « Envoi vers Google non configuré » | `"sheet":false` : `SHEET_SCRIPT_URL` ou `SHEET_TOKEN` manquant (bloc **Runtime**), ou pas redéployé. |
+| « unauthorized » ou « Le script Google ne répond pas correctement » | `SHEET_TOKEN` différent de `TOKEN`, ou script pas en accès « Tout le monde », ou pas publié en nouvelle version. |
+| Pas de proposition d'installation sur iPhone | Il faut Safari, pas Chrome ni l'aperçu d'une autre app. |
+| L'ancienne version reste affichée | Fermer complètement l'app et la rouvrir, avec du réseau. |
+| La caméra ne s'ouvre pas | Autoriser l'appareil photo dans les réglages du téléphone. |
+| La première lecture de carte échoue | Elle télécharge le lecteur de texte une fois : il faut du réseau. |
+| Données disparues du téléphone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. Avec la sauvegarde en ligne, entrez le mot de passe pour tout récupérer. |
+| Mot de passe oublié | Changez le secret `APP_PASSWORD` dans Cloudflare, **Deploy**, puis entrez le nouveau sur chaque téléphone. |
 
 ## Données personnelles
 
-Les cartes contiennent des données de prospects. Pour les mailings, prévois une mention d'information et un lien de désinscription (RGPD, prospection B2B). Ce n'est pas un avis juridique. La position GPS d'une zone est envoyée à OpenStreetMap (Nominatim) pour retrouver le nom de la rue ; les photos de cartes ne sont jamais enregistrées.
+- Les données sont sur le téléphone et dans votre base Cloudflare (D1) : Cloudflare est un sous-traitant à mentionner dans votre politique de confidentialité. Exportez quand même en Excel de temps en temps.
+- La position d'une zone est envoyée à OpenStreetMap (Nominatim) pour trouver le nom de la rue. La carte et le lecteur de cartes de visite sont chargés depuis cdn.jsdelivr.net. Les photos de cartes ne sont jamais enregistrées.
+- Les cartes de visite contiennent des données de prospects : dans les mailings, prévoyez une mention d'information et un lien de désinscription (ce n'est pas un avis juridique).
+- L'adresse `workers.dev` n'est pas indexée par les moteurs de recherche, et sans mot de passe on ne voit qu'une app vide.
 
 ## Pour les développeurs
 
-App en JavaScript pur, sans build. `_worker.js` (route `/api/sync` et `/api/sheet`) et `wrangler.jsonc` pour Cloudflare. Test local : `python3 -m http.server 8000`. Tests : `node --test test/*.mjs`.
+JavaScript pur, sans build. `_worker.js` sert les routes `/api/sync` (base D1) et `/api/sheet` (relais vers Apps Script) et laisse le reste aux fichiers statiques ; `wrangler.jsonc` le configure. `.assetsignore` empêche de publier les fichiers serveur. Test local : `python3 -m http.server 8000`. Tests : `node --test test/*.mjs`. La carte s'ouvre centrée sur Évreux tant qu'aucun point n'est enregistré (`app.js`, `setView`).

@@ -1,4 +1,4 @@
-// Script Google à coller dans le tableau de bord (Extensions > Apps Script). Mode d'emploi : DEPLOIEMENT.md.
+// Script Google à coller dans le tableau de bord (Extensions > Apps Script). Mode d'emploi : README.md.
 // Il reçoit un jour de prospection depuis l'app et :
 //   1. ajoute une ligne « synthèse du jour » dans l'onglet du mois (dans le bloc de la bonne semaine) ;
 //   2. ajoute ou met à jour une ligne dans l'onglet « Projets » pour chaque client en R1 ou R2.

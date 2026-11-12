@@ -424,7 +424,7 @@ $('send-sheet').onclick = async () => {
   try {
     const res = await fetch('/api/sheet', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${pw}` }, body: JSON.stringify(payload) });
     if (res.status === 401) return out('Mot de passe refusé : reconnectez la sauvegarde en ligne.');
-    if (res.status === 503 || res.status === 404 || res.status === 405 || res.status === 501) return out('Envoi vers Google non configuré (voir DEPLOIEMENT.md).');
+    if (res.status === 503 || res.status === 404 || res.status === 405 || res.status === 501) return out('Envoi vers Google non configuré (voir le README).');
     const r = await res.json().catch(() => ({}));
     const lines = [];
     if (r.jour) lines.push(`Onglet « ${r.jour.tab} », ligne ${r.jour.row} (${r.jour.action})`);

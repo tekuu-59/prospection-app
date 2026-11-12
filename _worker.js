@@ -1,5 +1,5 @@
 // Cloudflare Pages (mode avancé) : sert l'app et une seule route d'API, /api/sync.
-// Réglages à faire dans Cloudflare : base D1 liée sous le nom DB, secret APP_PASSWORD. Voir DEPLOIEMENT.md.
+// Réglages à faire dans Cloudflare : base D1 liée sous le nom DB, secret APP_PASSWORD. Voir README.md.
 const json = (o, status = 200) =>
   new Response(JSON.stringify(o), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 

@@ -1,6 +1,6 @@
 # Prospection : contexte pour Claude
 
-PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans build**, déployée en **Cloudflare Worker + assets** depuis GitHub (adresse `*.workers.dev`). Docs utilisateur : `README.md` (installation, usage), `DEPLOIEMENT.md` (détails, Google Sheet). Réponds en français.
+PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans build**, déployée en **Cloudflare Worker + assets** depuis GitHub (adresse `*.workers.dev`). Docs utilisateur : `README.md` (installation, usage, Google Sheet, dépannage). Réponds en français.
 
 ## Architecture
 - `index.html`, `style.css`, `app.js` : l'app (onglets Portes, Carte, Stats, Cartes). Données dans localStorage via `store.js`.

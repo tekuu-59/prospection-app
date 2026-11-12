@@ -1,4 +1,4 @@
--- À exécuter une fois dans la console de la base D1 (voir DEPLOIEMENT.md).
+-- À exécuter une fois dans la console de la base D1 (voir le README).
 CREATE TABLE IF NOT EXISTS records (
   id      TEXT PRIMARY KEY,
   kind    TEXT NOT NULL,
