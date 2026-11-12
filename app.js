@@ -488,6 +488,7 @@ function watch() {
   const v = $('cam-video');
   if (!stream) return;
   if (v.videoWidth) {
+    placeFrame(); // Safari iOS : taille de la vidéo encore à 0 à l'ouverture, et « resize » pas toujours émis
     const r = frameRect(v.videoWidth, v.videoHeight);
     watchCanvas.width = 240;
     watchCanvas.height = Math.round(240 / CARD);
@@ -516,6 +517,7 @@ function watch() {
 }
 function placeFrame() {
   const v = $('cam-video');
+  if (!v.videoWidth) return;
   const r = frameRect(v.videoWidth, v.videoHeight);
   Object.assign($('cam-frame').style, {
     left: `${(100 * r.x) / v.videoWidth}%`, top: `${(100 * r.y) / v.videoHeight}%`,
