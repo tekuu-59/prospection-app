@@ -87,3 +87,4 @@ nav button span { display: block; font-size: 20px; }
 
 .duree-pick { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 18px; color: var(--black); }
 .duree-pick select { flex: 1; padding: 12px; font-size: 18px; border: 1px solid #d4d4d8; border-radius: 10px; background: var(--card); color: var(--black); }
+.list .cal { font-size: 22px; text-decoration: none; padding: 0 8px; }

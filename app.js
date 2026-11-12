@@ -12,6 +12,13 @@ const today = () => {
 };
 const frDate = (iso) => iso.split('-').reverse().join('/');
 const frWhen = (q) => `${frDate(q.slice(0, 10))} ${q.slice(11, 16)}`;
+// Lien « ajouter à Google Agenda » (pas d'OAuth) ; rendez-vous d'1 h, heure locale du téléphone
+const gcalUrl = (c, lieu) => {
+  const fmt = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}00`;
+  const start = new Date(c.quand);
+  const p = new URLSearchParams({ action: 'TEMPLATE', text: `RDV ${c.client || 'prospection'}`, dates: `${fmt(start)}/${fmt(new Date(+start + 3600e3))}`, details: c.commentaire || '', location: lieu || '' });
+  return `https://calendar.google.com/calendar/render?${p}`;
+};
 const asDate = (iso) => new Date(`${iso}T00:00:00Z`);
 const el = (tag, props = {}, ...kids) => {
   const n = Object.assign(document.createElement(tag), props);
@@ -166,7 +173,8 @@ function renderProspection() {
     return el('li', {}, el('div', { className: 'main' },
       el('b', { textContent: `${c.heure ? c.heure + ' · ' : ''}${c.client || 'Sans nom'}` }),
       ...(tag ? [el('small', { textContent: tag })] : []),
-      ...(c.commentaire ? [el('small', { textContent: c.commentaire })] : [])), del);
+      ...(c.commentaire ? [el('small', { textContent: c.commentaire })] : [])),
+    ...(c.statut === 'r1' && c.quand ? [el('a', { href: gcalUrl(c, e.zone), target: '_blank', rel: 'noopener', textContent: '📅', title: 'Ajouter à Google Agenda', ariaLabel: 'Ajouter à Google Agenda', className: 'cal' })] : []), del);
   }));
   $('zones').replaceChildren(...[...new Set(days.map((d) => d.zone).filter(Boolean))].map((z) => el('option', { value: z })));
 

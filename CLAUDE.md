@@ -9,7 +9,7 @@ PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans bui
 - `schema.sql` : table D1 `records`. `wrangler.jsonc` : nom du Worker, binding `DB` (D1) et `ASSETS`.
 - `apps-script/Code.gs` : à coller dans le Google Sheet (onglet du mois + « Projets »).
 - `parse-card.js` : lecture des cartes de visite (OCR Tesseract.js chargé depuis jsdelivr). `xlsx.js` : écriture xlsx maison. `stats.js`, `duree.js`.
-- `sw.js` : service worker, réseau d'abord. **Change `VERSION` à chaque modification du code**, et le numéro affiché dans `index.html`.
+- `sw.js` : service worker, réseau d'abord. **Change `VERSION` à chaque modification du code**, et le numéro affiché dans `index.html`. Format `v0.X` : chaque petite mise à jour incrémente X (0.9 → 0.10 → 0.11…) ; la version majeure ne change que si l'utilisateur le demande. Dans `index.html`, afficher aussi la date et l'heure de la modification : `v0.10 (jj/mm/aaaa HHhMM)`.
 
 ## Règles du produit
 - R1 = rendez-vous pris (avec date), R2 = à repasser (date facultative). Statuts **par client**, pas par zone.
