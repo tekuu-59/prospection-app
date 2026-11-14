@@ -1,7 +1,7 @@
 // Hors-ligne : l'app est mise en cache à la 1re visite ; les bibliothèques de vendor/ (carte, lecteur
 // de texte) sont mises en cache la 1re fois qu'on s'en sert.
 // Pour publier une nouvelle version, changer VERSION.
-const VERSION = 'v0.11';
+const VERSION = 'v0.12';
 const APP = [
   './', 'index.html', 'style.css', 'app.js', 'xlsx.js', 'parse-card.js', 'store.js',
   'sync.js', 'stats.js', 'duree.js', 'rgpd.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
