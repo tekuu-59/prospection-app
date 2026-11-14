@@ -4,6 +4,7 @@ import { read, write } from './store.js';
 import { createSync } from './sync.js';
 import { computeStats, tournee } from './stats.js';
 import { formatDuree } from './duree.js';
+import { purge } from './rgpd.js';
 
 const $ = (id) => document.getElementById(id);
 const today = () => {
@@ -286,9 +287,9 @@ let leafletReady, map, layer, mapAll = false;
 function loadLeaflet() {
   leafletReady ??= new Promise((ok, ko) => {
     if (window.L) return ok(window.L);
-    const css = el('link', { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css' });
-    // shortcut: pas d'intégrité SRI ni de copie locale, à ajouter si l'app sort de l'usage perso
-    const js = el('script', { src: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js' });
+    // copie locale (vendor/) : pas de code venu d'un CDN dans une app qui garde le mot de passe
+    const css = el('link', { rel: 'stylesheet', href: 'vendor/leaflet-1.9.4/leaflet.css' });
+    const js = el('script', { src: 'vendor/leaflet-1.9.4/leaflet.js' });
     js.onload = () => ok(window.L);
     js.onerror = () => { leafletReady = null; ko(new Error('offline')); };
     document.head.append(css, js);
@@ -424,6 +425,7 @@ $('send-sheet').onclick = async () => {
   try {
     const res = await fetch('/api/sheet', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${pw}` }, body: JSON.stringify(payload) });
     if (res.status === 401) return out('Mot de passe refusé : reconnectez la sauvegarde en ligne.');
+    if (res.status === 429) return out('Trop de tentatives : réessayez dans une minute.');
     if (res.status === 503 || res.status === 404 || res.status === 405 || res.status === 501) return out('Envoi vers Google non configuré (voir le README).');
     const r = await res.json().catch(() => ({}));
     const lines = [];
@@ -446,8 +448,7 @@ function loadTesseract() {
   tesseractReady ??= new Promise((ok, ko) => {
     if (window.Tesseract) return ok(window.Tesseract);
     const s = document.createElement('script');
-    // shortcut: pas d'intégrité SRI ni de copie locale, à ajouter si l'app sort de l'usage perso
-    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.src = 'vendor/tesseract-5.1.1/tesseract.min.js'; // copie locale, comme Leaflet
     s.onload = () => ok(window.Tesseract);
     s.onerror = () => { tesseractReady = null; ko(new Error('offline')); };
     document.head.append(s);
@@ -592,7 +593,14 @@ async function readCard(source) {
     const T = await loadTesseract();
     const bmp = await createImageBitmap(source, { imageOrientation: 'from-image' });
     $('status').textContent = 'Lecture de la carte… (la 1re fois, c\'est plus long)';
-    const worker = await T.createWorker('fra+eng');
+    // tout depuis vendor/ (sinon Tesseract va chercher son code et ses données sur jsdelivr) ;
+    // pas de worker « blob: », que la CSP interdit
+    const worker = await T.createWorker('fra+eng', 1, {
+      workerPath: 'vendor/tesseract-5.1.1/worker.min.js',
+      corePath: 'vendor/tesseract-core-5.1.1',
+      langPath: 'vendor/tessdata-4.0.0_best_int',
+      workerBlobURL: false,
+    });
     // Carte de biais : une lecture redressée puis une droite, analysées ensemble. Une photo prise en
     // perspective n'a pas un seul angle (le haut et le bas de la carte diffèrent) : chaque lecture
     // rattrape des lignes que l'autre rate.
@@ -670,6 +678,10 @@ $('export-contacts').onclick = () => {
   download(buildXlsx([{ name: 'Contacts', columns: cols, rows }]), `contacts-${today()}.xlsx`);
 };
 
+{ // RGPD : les prospects de plus de 3 ans sont effacés tout seuls (voir rgpd.js)
+  const p = purge(days, contacts, today());
+  if (p.n) { days = p.days; contacts = p.contacts; save(); setTimeout(() => toast(`${p.n} fiche(s) de plus de 3 ans effacée(s) (RGPD)`), 500); }
+}
 renderProspection();
 renderContacts();
 sync.run();

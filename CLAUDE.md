@@ -9,7 +9,8 @@ PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans bui
 - `schema.sql` : table D1 `records`. `wrangler.jsonc` : nom du Worker, binding `DB` (D1) et `ASSETS`.
 - `apps-script/Code.gs` : à coller dans le Google Sheet (onglet du mois + « Projets »).
 - `parse-card.js` : lecture des cartes de visite (OCR Tesseract.js chargé depuis jsdelivr). `xlsx.js` : écriture xlsx maison. `stats.js`, `duree.js`.
-- `sw.js` : service worker, réseau d'abord. **Change `VERSION` à chaque modification du code**, et le numéro affiché dans `index.html`. Format `v0.X` : chaque petite mise à jour incrémente X (0.9 → 0.10 → 0.11…) ; la version majeure ne change que si l'utilisateur le demande. Dans `index.html`, afficher aussi la date et l'heure de la modification : `v0.10 (jj/mm/aaaa HHhMM)`.
+- `vendor/` : Leaflet et Tesseract (code, cœur wasm, données fra/eng) copiés depuis npm, version dans le nom du dossier ; aucun CDN. `_headers` : CSP stricte et en-têtes de sécurité. `rgpd.js` : effacement des prospects à 3 ans.
+- `sw.js` : service worker, réseau d'abord. `vendor/` en cache d'abord. **Change `VERSION` à chaque modification du code**, et le numéro affiché dans `index.html`. Format `v0.X` : chaque petite mise à jour incrémente X (0.9 → 0.10 → 0.11…) ; la version majeure ne change que si l'utilisateur le demande. Dans `index.html`, afficher aussi la date et l'heure de la modification : `v0.10 (jj/mm/aaaa HHhMM)`.
 
 ## Règles du produit
 - R1 = rendez-vous pris (avec date), R2 = à repasser (date facultative). Statuts **par client**, pas par zone.
@@ -20,6 +21,8 @@ PWA de prospection porte-à-porte pour une franchise. JavaScript pur, **sans bui
 - `.assetsignore` obligatoire (sinon `_worker.js` est publié, et le build échoue). `.wrangler` aussi.
 - `wrangler.jsonc` : `database_id` propre à chaque fork ; ne pas écraser lors d'une synchro de fork.
 - Un changement d'adresse du site efface les données locales des téléphones (stockage par origine).
+- CSP : pas de `innerHTML`, pas de script ni de worker `blob:` (Tesseract : `workerBlobURL: false`) ; le wasm demande `'wasm-unsafe-eval'`.
+- Google Sheet : texte commençant par `= + - @` préfixé d'une apostrophe (`texte()` dans `Code.gs`), contre l'injection de formules.
 - OCR : le `@` est lu `æ`, `©`… ; corrigé dans `parse-card.js`.
 
 ## Tests

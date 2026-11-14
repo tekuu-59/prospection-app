@@ -91,3 +91,19 @@ test('/api/sheet : mot de passe, configuration, relais vers le script avec jeton
     assert.equal((await post(sheetEnv, { date: '2026-11-10' })).status, 502);
   } finally { globalThis.fetch = realFetch; }
 });
+
+test('trop d’essais : 429 au-delà de la limite (binding LIMITER)', async () => {
+  let n = 0;
+  const e = { ...env(), LIMITER: { limit: async ({ key }) => { assert.equal(key, '1.2.3.4'); return { success: ++n <= 2 }; } } };
+  const hit = (pw) => worker.fetch(new Request('https://x.test/api/sync', { method: 'POST', headers: { authorization: `Bearer ${pw}`, 'cf-connecting-ip': '1.2.3.4' }, body: '{}' }), e);
+  assert.equal((await hit('nope')).status, 401);
+  assert.equal((await hit('nope')).status, 401);
+  assert.equal((await hit('secret-phrase')).status, 429); // même le bon mot de passe attend : pas d'essai gratuit
+});
+
+test('date dans le futur (horloge fausse) ramenée à maintenant', async () => {
+  const e = env();
+  await call(e, { since: 0, changes: [rec('d:2026-11-10|Gare', { portes: 1 }, 9e15)] });
+  const r = await (await call(e, { since: 0, changes: [rec('d:2026-11-10|Gare', { portes: 2 }, Date.now() + 1000)] })).json();
+  assert.equal(JSON.parse(r.records[0].data).portes, 2); // la fiche « du futur » ne bloque plus les suivantes
+});

@@ -22,6 +22,13 @@ function ymd(v) {
   return '';
 }
 
+// Un texte qui commence par = + - @ deviendrait une formule (ex. =IMPORTDATA("https://…") qui envoie
+// le tableau ailleurs) : l'apostrophe le force en texte, Google ne l'affiche pas.
+function texte(v) {
+  var s = String(v == null ? '' : v);
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
 function asDate(dateStr, timeStr) {
   var p = dateStr.split('-'), t = timeStr ? timeStr.split(':') : [0, 0];
   return new Date(+p[0], +p[1] - 1, +p[2], +t[0], +t[1]);
@@ -137,9 +144,9 @@ function ecrireProjets(ss, clients, dateStr) {
     var date = sh.getRange(row + 1, h.cols.date + 1);
     date.setValue(asDate(dateStr));
     date.setNumberFormat('dd/mm/yyyy');
-    set(h.cols.nom, nom);
+    set(h.cols.nom, texte(nom));
     set(h.cols.r, c.statut === 'r2' ? 'R2' : 'R1');
-    set(h.cols.besoin, c.commentaire);
+    set(h.cols.besoin, texte(c.commentaire));
     if (c.quand) {
       var cell = sh.getRange(row + 1, h.cols.rdv + 1);
       cell.setValue(asDate(c.quand.slice(0, 10), c.quand.slice(11, 16)));

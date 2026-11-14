@@ -21,8 +21,13 @@ const valid = (c) =>
 async function refuse(request, env) {
   if (request.method !== 'POST') return json({ error: 'method' }, 405);
   if (!env.APP_PASSWORD) return json({ error: 'not_configured' }, 503);
+  // Contre les essais de mots de passe en série : 60 requêtes par minute et par adresse IP
+  // (l'app en fait bien moins). Binding LIMITER déclaré dans wrangler.jsonc.
+  if (env.LIMITER) {
+    const { success } = await env.LIMITER.limit({ key: request.headers.get('cf-connecting-ip') ?? 'inconnue' });
+    if (!success) return json({ error: 'too_many' }, 429);
+  }
   const auth = (request.headers.get('authorization') ?? '').replace(/^Bearer /, '');
-  // shortcut: pas de limitation du nombre d'essais, un mot de passe long suffit ; ajouter une règle de rate limiting Cloudflare si besoin
   return (await same(auth, env.APP_PASSWORD)) ? null : json({ error: 'unauthorized' }, 401);
 }
 
@@ -77,7 +82,7 @@ export default {
         `INSERT INTO records (id, kind, data, updated, deleted, rev) VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET kind = excluded.kind, data = excluded.data, updated = excluded.updated,
            deleted = excluded.deleted, rev = excluded.rev WHERE excluded.updated >= records.updated`,
-      ).bind(c.id, c.kind, c.data, c.updated, c.deleted ? 1 : 0, now),
+      ).bind(c.id, c.kind, c.data, Math.min(c.updated, now), c.deleted ? 1 : 0, now), // date future (horloge fausse) ramenée à maintenant
     );
     if (up.length) await env.DB.batch(up);
 

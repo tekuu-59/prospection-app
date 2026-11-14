@@ -28,7 +28,7 @@ Il vous faut un compte [GitHub](https://github.com) et un compte [Cloudflare](ht
 
 ### 2. Créer la base de données
 
-1. Cloudflare : **Storage & Databases**, **D1 SQL Database**, **Create database**, nom `prospection`.
+1. Cloudflare : **Storage & Databases**, **D1 SQL Database**, **Create database**, nom `prospection`. Dans les options d'emplacement (**Location** / **Jurisdiction**), choisissez **EU** : les données de vos prospects restent alors dans l'Union européenne (plus simple pour le RGPD). Ce choix n'est possible qu'à la création. Si l'option n'apparaît pas : `npx wrangler d1 create prospection --jurisdiction eu` dans un terminal.
 2. Ouvrez-la, onglet **Console** : collez le contenu du fichier [`schema.sql`](schema.sql), puis **Execute**.
 3. Copiez son **Database ID** (un long identifiant du type `3940d0da-…`, pas le nom).
 
@@ -51,6 +51,20 @@ Puis **Commit changes**.
 ### 5. Choisir le mot de passe
 
 Dans le Worker : **Settings**, **Variables and Secrets** (le bloc **Runtime**, pas celui de Build), **Add**, type **Secret**, nom `APP_PASSWORD`, valeur : une longue phrase de passe (16 caractères ou plus). Puis **Deploy** : un secret n'est pris en compte qu'après un déploiement.
+
+Le Worker limite déjà les essais à 60 par minute et par adresse (bloc `ratelimits` de `wrangler.jsonc`), ce qui rend inutile une attaque par essais successifs sur une longue phrase de passe.
+
+**Recommandé : fermer l'app aux inconnus avec Cloudflare Access** (gratuit jusqu'à 50 utilisateurs). Seules les adresses e-mail que vous autorisez peuvent alors ouvrir l'app, après un code reçu par e-mail. Le mot de passe reste une deuxième barrière.
+
+1. **Zero Trust**, **Access controls**, **Applications**, **Add an application**, **Self-hosted**, destination **Workers**.
+2. **Destinations** : **Scope** = le nom de votre Worker (celui de `wrangler.jsonc`), **Type** = « A Worker's production and preview URLs ». Laissez « RDP, SSH, VNC » sur Off.
+3. **Access policies**, **Create new policy** : nom (ex. `Equipe`), **Action** = **Allow**, **Session duration** = **1 month** (pour ne pas devoir vous reconnecter sur le terrain), règle **Include**, **Emails** = les adresses des personnes qui prospectent. Enregistrez, revenez sur l'application et ajoutez cette règle (**Add existing policy**).
+4. **Authentication** : laissez « Accept all available identity providers » activé ; le code par e-mail (One-time PIN) est inclus.
+5. **Details** : **Name** = `Prospection`, **Session Duration** = **1 month**.
+6. Vérifiez que le bloc **Preview** montre bien le Worker sous **Destinations** (sinon « No destinations assigned » : rien n'est protégé), puis **Create**.
+7. Testez dans une fenêtre de navigation privée : Cloudflare demande l'e-mail puis un code, puis l'app s'affiche. Sur le téléphone, ouvrez l'app avec du réseau et connectez-vous une fois. Hors ligne, l'app marche toujours ; la synchro reprend après reconnexion. Au bout d'un mois, la synchro échoue : rechargez l'app pour vous reconnecter (les données du téléphone ne sont pas touchées).
+
+Les intitulés des écrans Cloudflare changent de temps en temps : suivez ceux que vous voyez.
 
 ### 6. Vérifier
 
@@ -100,6 +114,8 @@ Ce que le script écrit :
 | Onglet du mois (son nom contient « novembre », « décembre »… ; les onglets « Modèle » sont ignorés) | Une ligne par jour, dans le bloc de la bonne semaine. Type = Prospection, Lieu = la zone si elle s'appelle Z1 à Z16, Durée en minutes, Contacts = nombre de portes poussées, R1, R2, Rendez-vous pris = R1. |
 | Onglet « Projets » | Une ligne par client en R1 ou R2 : Date, Nom du projet, R, Besoin (le commentaire), Date de rendez-vous. |
 
+**RGPD** : le tableau reçoit des noms de prospects. Utilisez un compte **Google Workspace** (professionnel) : il comprend un contrat de traitement des données avec Google, contrairement à un compte Gmail gratuit. Un texte saisi qui commence par `=`, `+`, `-` ou `@` est écrit comme du texte, jamais comme une formule.
+
 Le tableau doit suivre le modèle du réseau : colonnes titrées Date, Type, Lieu, Durée, Contacts, R1, R2, Rendez-vous pris (déplaçables, pas renommables), et un onglet « Projets ». Les lignes de synthèse et de performance ne sont jamais modifiées. Si le tableau appartient à un Google Workspace qui interdit l'accès « Tout le monde », essayez depuis une copie sur un compte personnel.
 
 **Après une modification du script** : **Déployer**, **Gérer les déploiements**, crayon, **Nouvelle version**, sinon l'adresse garde l'ancien code.
@@ -109,7 +125,7 @@ Le tableau doit suivre le modèle du réseau : colonnes titrées Date, Type, Lie
 ## Recevoir les mises à jour
 
 1. Sur votre fork GitHub : **Sync fork**, puis **Update branch**. Cloudflare republie tout seul.
-2. En cas de conflit sur `wrangler.jsonc` : gardez **votre** version (votre nom et votre Database ID).
+2. En cas de conflit sur `wrangler.jsonc` : gardez **votre** nom et **votre** Database ID, mais reprenez les nouveaux blocs (par exemple `ratelimits`).
 3. Sur le téléphone : fermez complètement l'app et rouvrez-la, deux fois si besoin. La version et sa date s'affichent tout en bas (par exemple `v0.9 (12/11/2026 21h04)`).
 
 Si vous modifiez vous-même le code : changez `VERSION` dans `sw.js` (`v0.9` → `v0.10`) et le numéro affiché en bas de `index.html`, sinon les téléphones gardent l'ancienne version.
@@ -127,19 +143,51 @@ Si vous modifiez vous-même le code : changez `VERSION` dans `sw.js` (`v0.9` →
 | Pas de proposition d'installation sur iPhone | Il faut Safari, pas Chrome ni l'aperçu d'une autre app. |
 | L'ancienne version reste affichée | Fermer complètement l'app et la rouvrir, avec du réseau. |
 | La caméra ne s'ouvre pas | Autoriser l'appareil photo dans les réglages du téléphone. |
-| La première lecture de carte échoue | Elle télécharge le lecteur de texte une fois : il faut du réseau. |
+| La première lecture de carte échoue | Elle télécharge le lecteur de texte (environ 8 Mo, depuis votre propre adresse) une fois : il faut du réseau. |
+| « Trop de tentatives » ou synchro « en attente » qui dure | Plus de 60 requêtes en une minute depuis la même adresse : attendez une minute. |
+| L'app affiche une page de connexion Cloudflare | Cloudflare Access est activé : entrez votre e-mail autorisé et le code reçu. |
 | Données disparues du téléphone | L'app n'était pas installée sur l'écran d'accueil, ou l'adresse a changé. Avec la sauvegarde en ligne, entrez le mot de passe pour tout récupérer. |
 | Mot de passe oublié | Changez le secret `APP_PASSWORD` dans Cloudflare, **Deploy**, puis entrez le nouveau sur chaque téléphone. |
 
 Toujours bloqué, ou une idée d'amélioration ? Posez-la dans les [Discussions du projet d'origine](https://github.com/tekuu-59/prospection-app/discussions) (pas dans votre fork). C'est public : jamais de mot de passe ni de données clients.
 
-## Données personnelles
+## Données personnelles (RGPD)
 
-- Les données sont sur le téléphone et dans votre base Cloudflare (D1) : Cloudflare est un sous-traitant à mentionner dans votre politique de confidentialité. Exportez quand même en Excel de temps en temps.
-- La position d'une zone est envoyée à OpenStreetMap (Nominatim) pour trouver le nom de la rue. La carte et le lecteur de cartes de visite sont chargés depuis cdn.jsdelivr.net. Les photos de cartes ne sont jamais enregistrées.
-- Les cartes de visite contiennent des données de prospects : dans les mailings, prévoyez une mention d'information et un lien de désinscription (ce n'est pas un avis juridique).
-- L'adresse `workers.dev` n'est pas indexée par les moteurs de recherche, et sans mot de passe on ne voit qu'une app vide.
+L'app tient un **fichier de prospects** (noms, commentaires, positions, cartes de visite). Chaque franchisé en est **responsable** : c'est votre fichier, pas celui de l'auteur de l'app. Ce qui suit résume vos obligations ; ce n'est pas un avis juridique, faites-le relire si besoin (service juridique du réseau, CNIL).
+
+**Ce que l'app fait déjà pour vous**
+
+- Effacement automatique : 3 ans après la date de prospection (durée recommandée par la CNIL pour un prospect), le nom, le commentaire et la position du client sont effacés, et les contacts de cartes de visite supprimés. Les compteurs (portes, R1, R2) restent pour les statistiques. Pensez à faire de même dans vos exports Excel et dans le Google Sheet.
+- Les photos de cartes ne sont jamais enregistrées. La carte et le lecteur de texte sont servis par votre propre adresse, sans CDN.
+- Un rappel sous le champ Commentaire : des faits utiles seulement, jamais de jugement sur la personne ni de donnée sensible (santé, religion, opinions…). La CNIL a déjà sanctionné des commentaires déplacés dans des fichiers clients.
+
+**Ce que vous devez faire**
+
+1. **Tenir un registre des traitements** (obligatoire même pour une petite entreprise, car la prospection est régulière). Une fiche suffit, par exemple :
+
+   | Rubrique | Contenu |
+   | --- | --- |
+   | Traitement | Prospection commerciale en porte-à-porte |
+   | Responsable | Votre société (raison sociale, adresse, gérant) |
+   | Finalité | Suivre les prospects rencontrés et les rendez-vous |
+   | Base légale | Intérêt légitime (art. 6.1.f RGPD) |
+   | Personnes | Commerçants, dirigeants et salariés d'entreprises prospectées |
+   | Données | Société, nom, fonction, e-mail, téléphone, adresse, commentaire, position GPS, date, statut R1/R2 |
+   | Durée | 3 ans après le dernier contact (effacement automatique dans l'app) |
+   | Destinataires | Vous et vos salariés habilités |
+   | Sous-traitants | Cloudflare (hébergement de l'app et base D1, juridiction UE si choisie), Google (Sheet, si utilisé), Fondation OpenStreetMap (nom de rue à partir de la position, tuiles de la carte) |
+   | Sécurité | Mot de passe, limite d'essais, Cloudflare Access (si activé), HTTPS, double authentification sur les comptes |
+
+2. **Informer les personnes** au plus tard au premier contact. Par exemple, au dos du flyer ou de la carte laissée sur place :
+
+   > Vos coordonnées sont enregistrées par [votre société] pour vous recontacter au sujet de votre projet, pendant 3 ans au plus. Vous pouvez y accéder, les corriger, les faire effacer ou vous opposer à leur utilisation : [e-mail]. Plus d'infos : [adresse de votre politique de confidentialité]. Réclamation possible auprès de la CNIL (cnil.fr).
+
+3. **Répondre aux demandes** sous un mois : l'export Excel donne la copie des données, et le 🗑 les supprime (aussi dans la sauvegarde en ligne). Pensez au Google Sheet.
+4. **Mailings** : une mention d'information et un lien de désinscription dans chaque e-mail.
+5. **Base créée avant cette version, hors UE** : pour la passer en UE, créez une nouvelle base avec la juridiction EU, puis `npx wrangler d1 export prospection --remote --output=prospection.sql` et `npx wrangler d1 execute NOUVELLE-BASE --remote --file=prospection.sql`, changez le Database ID dans `wrangler.jsonc` et supprimez l'ancienne base.
+
+L'adresse `workers.dev` n'est pas indexée par les moteurs de recherche, et sans mot de passe on ne voit qu'une app vide.
 
 ## Pour les développeurs
 
-JavaScript pur, sans build. `_worker.js` sert les routes `/api/sync` (base D1) et `/api/sheet` (relais vers Apps Script) et laisse le reste aux fichiers statiques ; `wrangler.jsonc` le configure. `.assetsignore` empêche de publier les fichiers serveur. Test local : `python3 -m http.server 8000`. Tests : `node --test test/*.mjs`. La carte s'ouvre centrée sur Évreux tant qu'aucun point n'est enregistré (`app.js`, `setView`).
+JavaScript pur, sans build. `_worker.js` sert les routes `/api/sync` (base D1) et `/api/sheet` (relais vers Apps Script) et laisse le reste aux fichiers statiques ; `wrangler.jsonc` le configure. `.assetsignore` empêche de publier les fichiers serveur. `_headers` donne les en-têtes de sécurité (CSP stricte : tout code vient de l'app ; voir `vendor/README.md` pour Leaflet et Tesseract). `rgpd.js` fait l'effacement à 3 ans. Test local : `python3 -m http.server 8000` (sans en-têtes ni API), ou `npx wrangler dev` pour avoir les deux. Tests : `node --test test/*.mjs`. La carte s'ouvre centrée sur Évreux tant qu'aucun point n'est enregistré (`app.js`, `setView`).

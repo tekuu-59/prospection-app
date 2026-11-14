@@ -49,6 +49,7 @@
         </fieldset>
         <label class="field" id="quand-label" hidden><span id="quand-text"></span> <input name="quand" type="datetime-local"></label>
         <label class="field">Commentaire <textarea name="commentaire" rows="3" placeholder="ex. intéressé par une enseigne, rappeler en janvier"></textarea></label>
+        <p class="hint">Des faits utiles au projet seulement : pas de jugement sur la personne ni d'info sensible (santé, religion, opinions…). La personne peut demander à lire ses données.</p>
         <div class="row"><button type="button" id="client-cancel" class="secondary">Annuler</button><button type="submit" class="primary">Ajouter</button></div>
       </form>
       <ul id="client-list" class="list"></ul>
@@ -124,7 +125,7 @@
       <button id="export-contacts" class="primary" type="button">Exporter en Excel</button>
     </section>
 
-    <p class="note">Les données sont enregistrées dans ce téléphone et, si la sauvegarde en ligne est activée, sur votre espace Cloudflare. Exportez aussi en Excel de temps en temps. · v0.10 (12/11/2026 21h08)</p>
+    <p class="note">Les données sont enregistrées dans ce téléphone et, si la sauvegarde en ligne est activée, sur votre espace Cloudflare. Exportez aussi en Excel de temps en temps. Les prospects de plus de 3 ans sont effacés automatiquement (RGPD). · v0.11 (14/11/2026 18h56)</p>
     <p class="note"><button id="reset" class="link inline" type="button">Effacer toutes les données…</button></p>
     <p class="note"><span id="sync-status"></span> <button id="sync-now" class="link inline" type="button" hidden>Synchroniser</button></p>
     <form id="sync-form" class="rdv-form" hidden>
